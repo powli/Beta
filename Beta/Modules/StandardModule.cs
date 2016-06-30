@@ -37,6 +37,40 @@ namespace Beta.Modules
                     await e.Channel.SendMessage(e.GetArg("text"));
                 });
 
+                cgb.CreateCommand("greet")
+                .MinPermissions((int)PermissionLevel.BotOwner) // An unrestricted say command is a bad idea
+                .Description("Make the bot speak!")
+                .Parameter("text", ParameterType.Unparsed)
+                .Do(async e =>
+                {
+                    await e.Channel.SendMessage(e.GetArg("text"));
+                });
+
+                cgb.CreateCommand("setmotd")
+                .MinPermissions((int)PermissionLevel.BotOwner) // An unrestricted say command is a bad idea
+                .Description("Make the bot speak!")
+                .Parameter("text", ParameterType.Unparsed)
+                .Do(async e =>
+                {
+                    await e.Channel.SendMessage(e.GetArg("text"));
+                });
+
+                cgb.CreateCommand("initstates")
+                .MinPermissions((int)PermissionLevel.BotOwner) // An unrestricted say command is a bad idea
+                .Description("Make the bot speak!")
+                .Parameter("text", ParameterType.Unparsed)
+                .Do(async e =>
+                {
+                    foreach (Server server in _client.Servers)
+                    {
+                        foreach (Channel channel in server.AllChannels)
+                        {
+                            Console.WriteLine("Channel Info:"+channel.Name+" : "+channel.Type);
+                        }
+                    }
+                    await e.Channel.SendMessage(e.GetArg("text"));
+                });
+
                 cgb.CreateCommand("roll")
                 .Description(@"Make Beta roll the specified number of dice. For Example typing $Roll 3d12 would cause Beta to return the results of rolling 3 12-sided die. You could also role a single 12-sided die with d12.")
                 .Parameter("roll", ParameterType.Required)

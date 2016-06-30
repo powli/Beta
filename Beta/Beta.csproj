@@ -118,9 +118,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Repository\ChannelStateRepository.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="ExtensionMethod.cs" />
-    <Compile Include="MessageRepository.cs" />
     <Compile Include="Modules\DiscordCommand.cs" />
     <Compile Include="Modules\DiscordModule.cs" />
     <Compile Include="Modules\QuoteModule.cs" />

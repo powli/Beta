@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Xml.Serialization;
 
-namespace Beta
+namespace Beta.Repository
 {
     [Serializable]
     public class ChannelStateRepository
@@ -20,7 +19,7 @@ namespace Beta
 
         public ChannelStateRepository()
         {
-            Messages = new List<Message>();
+            ChannelState = new List<ChannelState>();
         }
 
         public void AddChannel()
@@ -37,15 +36,15 @@ namespace Beta
             }
         }
 
-        public MessageRepository LoadFromDisk()
+        public static ChannelStateRepository LoadFromDisk()
         {
-            MessageRepository dictionary;
+            ChannelStateRepository dictionary;
             if ( File.Exists(_Filename) )
             {
-                XmlSerializer serializer = new XmlSerializer(typeof(MessageRepository));
+                XmlSerializer serializer = new XmlSerializer(typeof(ChannelStateRepository));
                 using (FileStream file = new FileStream(_Filename, FileMode.Open))
                 {
-                    dictionary = serializer.Deserialize(file) as MessageRepository;
+                    dictionary = serializer.Deserialize(file) as ChannelStateRepository;
                 }
             }
             else
@@ -76,5 +75,11 @@ namespace Beta
 
         [XmlAttribute]
         public bool MOTDSet { get; set; }
+
+        [XmlAttribute]
+        public bool GreetMode { get; set; }
+
+        [XmlAttribute]
+        public string ChannelType { get; set; }
     }
 }

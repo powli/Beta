@@ -9,6 +9,7 @@ using Discord.Modules;
 using System.IO;
 using Beta.Modules;
 using Beta.JSONConfig;
+using Beta.Repository;
 using Beta.Utils;
 using Newtonsoft.Json;
 using Discord.API.Client.Rest;
@@ -48,7 +49,7 @@ namespace Beta
             get;
             private set;
         }
-        public Dictionary<ulong, MessageRepository> ChannelRepository
+        public static ChannelStateRepository ChannelStateRepository
         {
             get;
             set;
@@ -112,6 +113,7 @@ namespace Beta
             {
                 await _client.Connect(Config.Token);
                 QuoteRepository = QuoteRepository.LoadFromDisk();
+                ChannelStateRepository = ChannelStateRepository.LoadFromDisk();
                 ChangeExpression("resting");
                 _client.Log.Info("Connected", $"Connected as {_client.CurrentUser.Name} (Id {_client.CurrentUser.Id})");
 
