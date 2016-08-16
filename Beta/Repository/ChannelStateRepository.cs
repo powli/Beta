@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
+using Discord;
 
 namespace Beta.Repository
 {
@@ -11,7 +13,7 @@ namespace Beta.Repository
         private const string _Filename = "ChannelStates.xml";
 
         [XmlArrayItem("ChannelState")]
-        public List<ChannelState> ChannelState
+        public List<ChannelState> ChannelStates
         {
             get;
             set;
@@ -19,12 +21,34 @@ namespace Beta.Repository
 
         public ChannelStateRepository()
         {
-            ChannelState = new List<ChannelState>();
+            ChannelStates = new List<ChannelState>();
         }
 
-        public void AddChannel()
+        public void AddChannel(Channel chnl, Server srvr)
         {
+            if (!VerifyChannelExists(chnl.Id))
+            {
+                ChannelStates.Add(new ChannelState()
+                {
+                    ChannelID = chnl.Id,
+                    ChannelName = chnl.Name,
+                    ChannelType = chnl.Type.Value,
+                    ServerID = srvr.Id,
+                    ServerName = srvr.Name,
+                });
+                Save();
+            }
+        }
 
+        public bool VerifyChannelExists(ulong id)
+        {
+            if (ChannelStates.FirstOrDefault(cs => cs.ChannelID == id) != null) return true;
+            else return false;
+        }
+
+        public ChannelState GetChannelState(ulong id)
+        {
+            return ChannelStates.FirstOrDefault(cs => cs.ChannelID == id);           
         }
 
         public void Save()
@@ -65,6 +89,9 @@ namespace Beta.Repository
         public string ChannelName {get; set;}
 
         [XmlAttribute]
+        public string ChannelType { get; set; }
+
+        [XmlAttribute]
         public ulong ServerID {get; set;}
 
         [XmlAttribute]
@@ -74,12 +101,21 @@ namespace Beta.Repository
         public string MOTD { get; set; }
 
         [XmlAttribute]
-        public bool MOTDSet { get; set; }
+        public bool MOTDSet { get; set; } = false;
 
         [XmlAttribute]
-        public bool GreetMode { get; set; }
+        public bool GreetMode { get; set; } = false;
 
-        [XmlAttribute]
-        public string ChannelType { get; set; }
+        /*public List<string> Greetings { get; set; } = new List<string>()
+        {
+            "Sup, homie?",
+            "Hey how's it going, {0}",
+            "Ugh, not this asshole again... Oh, hi {0}! I didn't see you there...",
+            "here come dat boi!!!!!! o shit waddup!",
+            "Greetings, {0}",
+            "WHADDUP {0}?!",
+        };*/
+
+
     }
 }

@@ -45,6 +45,60 @@ namespace Beta.Modules
                     }
                 });
 
+                cgb.CreateCommand("list")
+                .Description("Return a numbered list of all quotes")
+                .Parameter("speaker", ParameterType.Unparsed)                
+                .Do(async e =>
+                {
+                    string name = e.GetArg("speaker").Trim();
+                    Author author = Beta.QuoteRepository.GetAuthor(name);
+                    if (author == null)
+                    {
+                        await e.Channel.SendMessage("Could not find author: '" + e.GetArg("Speaker") + "'");
+                    }
+                    else
+                    {
+                        string reply = "";
+                        int index = 1;
+                        Console.WriteLine(author.Quotes[0].Text);
+                        foreach (Quote quote in author.Quotes)
+                        {
+                            reply += index++ + ". " + quote.Text + "\r\n";
+                        }
+                        await e.User.SendMessage(reply);
+                    }
+                });
+
+                cgb.CreateCommand("delete")
+                .Description("Return a numbered list of all quotes")
+                .Parameter("text", ParameterType.Unparsed)
+                .MinPermissions((int)PermissionLevel.ChannelModerator)
+                .Do(async e =>
+                {
+                    var args = e.GetArg("text").Split('|');
+                    Author existingAuthor = Beta.QuoteRepository.GetAuthor(args[0]);
+                    int index;
+                    if (Int32.TryParse(args[1], out index))
+                    {
+
+                        if (existingAuthor == null)
+                        {
+                            await e.Channel.SendMessage("Sorry, I don't recognize that author.");
+                        }
+                        else
+                        {
+                            await e.Channel.SendMessage(Beta.QuoteRepository.DeleteQuote(existingAuthor, index));
+                            if (existingAuthor.Quotes.Count == 0)
+                            {
+                                Beta.QuoteRepository.RemoveAuthor(existingAuthor);
+                                await e.Channel.SendMessage("Looks like we're actually out of quotes for " + existingAuthor +
+                                                      " so I'll remove it from the list as well.");
+                            }
+                        }
+                    }
+                    else await e.Channel.SendMessage("Sorry, but that doesn't look like a number to me.");                    
+                });
+
                 cgb.CreateCommand("quotable")
                 .Description("Return a list of all speakers we have stored quotes for")
                 .Do(async e =>
@@ -60,14 +114,28 @@ namespace Beta.Modules
                 {
                     Beta.conv.Convert(Beta.QuoteRepository);
                 });
-                /*cgb.CreateCommand("")
-                .MinPermissions((int)PermissionLevel.BotOwner) // An unrestricted say command is a bad idea
-                .Description("Make the bot speak!")
+
+                cgb.CreateCommand("add")
+                .Description("Add a quote for the specified Author. $add Author|Whatever that author said.")
                 .Parameter("text", ParameterType.Unparsed)
                 .Do(async e =>
                 {
-                    await e.Channel.SendMessage(e.GetArg("text"));
-                });*/
+                    var args = e.GetArg("text").Split('|');
+                    Author existingAuthor = Beta.QuoteRepository.GetAuthor(args[0]);
+                    Beta.QuoteRepository.AddQuote(args[0], args[1], e.User.Name);
+
+                    if (existingAuthor != null)
+                    {
+                        await e.Channel.SendMessage(String.Format("Successfully added another quote from '{0}', dawg.", existingAuthor.Name));
+                    }
+                    else
+                    {
+                        await e.Channel.SendMessage(String.Format("Successfully added quote from '{0}', dawg.", args[0]));
+                    }
+
+                    // Save after every add
+                    Beta.QuoteRepository.Save();
+                });
             });
        }
 

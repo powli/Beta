@@ -67,6 +67,29 @@ namespace Beta
             return quote;
         }
 
+        public string DeleteQuote(Author author, int index)
+        {            
+            index--;
+            string response = "";
+            if (author == null)
+            {
+                return "Sorry, I was unable to find that author. Please check your spelling!";
+            }
+            else
+            {
+                if (index < author.Quotes.Count)
+                {
+                    response += "Ok, so you want me to delete quote " + (index + 1) + " by " + author.Name +
+                                "? You got it!\r\n";
+                    response += "Successfully remove the following quote: '" + author.Quotes[index].Text + "'.";
+                    author.Quotes.RemoveAt(index);
+                }
+                else response = "Sorry, the provided index, "+(index+1)+" is much too large! Did you send the right number?";
+                Save();
+                return response;
+            }
+        }
+
         /// <summary>
         /// Save to file
         /// </summary>
@@ -102,6 +125,12 @@ namespace Beta
             }
 
             return dictionary;
+        }
+
+        internal void RemoveAuthor(Author existingAuthor)
+        {
+            Authors.Remove(existingAuthor);
+            Save();
         }
     }
 
@@ -149,7 +178,9 @@ namespace Beta
 
         public override string ToString()
         {
-            return string.Format("{0} - {1} Quote(s)", Name, Quotes.Count);
+            if (Quotes.Count > 1) return string.Format("{0} - {1} Quotes", Name, Quotes.Count);
+            return string.Format("{0} - {1} Quote", Name, Quotes.Count);
+
         }
     }
 
