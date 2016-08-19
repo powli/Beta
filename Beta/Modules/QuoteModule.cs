@@ -32,16 +32,20 @@ namespace Beta.Modules
                 .Parameter("speaker", ParameterType.Unparsed)
                 .Do(async e =>
                 {
-                    string name = e.GetArg("speaker").Trim();
-                    Author author = Beta.QuoteRepository.GetAuthor(name);
-                    if (author == null)
+                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "quote"))
                     {
-                        await e.Channel.SendMessage( "Could not find author: '"+e.GetArg("Speaker")+"'");
-                    }
-                    else
-                    {
-                        string reply = string.Format(_QuoteFormat, ReplaceVariables(author.Quotes.GetRandom().Text, e.Message.User.Name), author.Name);
-                        await e.Channel.SendMessage(reply);
+                        string name = e.GetArg("speaker").Trim();
+                        Author author = Beta.QuoteRepository.GetAuthor(name);
+                        if (author == null)
+                        {
+                            await e.Channel.SendMessage("Could not find author: '" + e.GetArg("Speaker") + "'");
+                        }
+                        else
+                        {
+                            string reply = string.Format(_QuoteFormat,
+                                ReplaceVariables(author.Quotes.GetRandom().Text, e.Message.User.Name), author.Name);
+                            await e.Channel.SendMessage(reply);
+                        }
                     }
                 });
 
@@ -50,22 +54,25 @@ namespace Beta.Modules
                 .Parameter("speaker", ParameterType.Unparsed)                
                 .Do(async e =>
                 {
-                    string name = e.GetArg("speaker").Trim();
-                    Author author = Beta.QuoteRepository.GetAuthor(name);
-                    if (author == null)
+                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "quote"))
                     {
-                        await e.Channel.SendMessage("Could not find author: '" + e.GetArg("Speaker") + "'");
-                    }
-                    else
-                    {
-                        string reply = "";
-                        int index = 1;
-                        Console.WriteLine(author.Quotes[0].Text);
-                        foreach (Quote quote in author.Quotes)
+                        string name = e.GetArg("speaker").Trim();
+                        Author author = Beta.QuoteRepository.GetAuthor(name);
+                        if (author == null)
                         {
-                            reply += index++ + ". " + quote.Text + "\r\n";
+                            await e.Channel.SendMessage("Could not find author: '" + e.GetArg("Speaker") + "'");
                         }
-                        await e.User.SendMessage(reply);
+                        else
+                        {
+                            string reply = "";
+                            int index = 1;
+                            Console.WriteLine(author.Quotes[0].Text);
+                            foreach (Quote quote in author.Quotes)
+                            {
+                                reply += index++ + ". " + quote.Text + "\r\n";
+                            }
+                            await e.User.SendMessage(reply);
+                        }
                     }
                 });
 
@@ -75,44 +82,55 @@ namespace Beta.Modules
                 .MinPermissions((int)PermissionLevel.ChannelModerator)
                 .Do(async e =>
                 {
-                    var args = e.GetArg("text").Split('|');
-                    Author existingAuthor = Beta.QuoteRepository.GetAuthor(args[0]);
-                    int index;
-                    if (Int32.TryParse(args[1], out index))
+                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "quote"))
                     {
+                        var args = e.GetArg("text").Split('|');
+                        Author existingAuthor = Beta.QuoteRepository.GetAuthor(args[0]);
+                        int index;
+                        if (Int32.TryParse(args[1], out index))
+                        {
 
-                        if (existingAuthor == null)
-                        {
-                            await e.Channel.SendMessage("Sorry, I don't recognize that author.");
-                        }
-                        else
-                        {
-                            await e.Channel.SendMessage(Beta.QuoteRepository.DeleteQuote(existingAuthor, index));
-                            if (existingAuthor.Quotes.Count == 0)
+                            if (existingAuthor == null)
                             {
-                                Beta.QuoteRepository.RemoveAuthor(existingAuthor);
-                                await e.Channel.SendMessage("Looks like we're actually out of quotes for " + existingAuthor +
-                                                      " so I'll remove it from the list as well.");
+                                await e.Channel.SendMessage("Sorry, I don't recognize that author.");
+                            }
+                            else
+                            {
+                                await e.Channel.SendMessage(Beta.QuoteRepository.DeleteQuote(existingAuthor, index));
+                                if (existingAuthor.Quotes.Count == 0)
+                                {
+                                    Beta.QuoteRepository.RemoveAuthor(existingAuthor);
+                                    await
+                                        e.Channel.SendMessage("Looks like we're actually out of quotes for " +
+                                                              existingAuthor +
+                                                              " so I'll remove it from the list as well.");
+                                }
                             }
                         }
+                        else await e.Channel.SendMessage("Sorry, but that doesn't look like a number to me.");
                     }
-                    else await e.Channel.SendMessage("Sorry, but that doesn't look like a number to me.");                    
                 });
 
                 cgb.CreateCommand("quotable")
                 .Description("Return a list of all speakers we have stored quotes for")
                 .Do(async e =>
                 {
-                    await e.Channel.SendMessage("Oh yeah sure one sec... I got quotes for all these guys: ");
-                    Beta.QuoteRepository.Authors = Beta.QuoteRepository.Authors.OrderBy(item => item.Name).ToList();                    
-                    await e.Channel.SendMessage(string.Join(Environment.NewLine, Beta.QuoteRepository.Authors));
+                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "quote"))
+                    {
+                        await e.Channel.SendMessage("Oh yeah sure one sec... I got quotes for all these guys: ");
+                        Beta.QuoteRepository.Authors = Beta.QuoteRepository.Authors.OrderBy(item => item.Name).ToList();
+                        await e.Channel.SendMessage(string.Join(Environment.NewLine, Beta.QuoteRepository.Authors));
+                    }
                 });
 
                 cgb.CreateCommand("convert")
                 .MinPermissions((int)PermissionLevel.BotOwner)                
                 .Do(e =>
                 {
-                    Beta.conv.Convert(Beta.QuoteRepository);
+                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "quote"))
+                    {
+                        Beta.conv.Convert(Beta.QuoteRepository);
+                    }
                 });
 
                 cgb.CreateCommand("add")
@@ -120,21 +138,28 @@ namespace Beta.Modules
                 .Parameter("text", ParameterType.Unparsed)
                 .Do(async e =>
                 {
-                    var args = e.GetArg("text").Split('|');
-                    Author existingAuthor = Beta.QuoteRepository.GetAuthor(args[0]);
-                    Beta.QuoteRepository.AddQuote(args[0], args[1], e.User.Name);
-
-                    if (existingAuthor != null)
+                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "quote"))
                     {
-                        await e.Channel.SendMessage(String.Format("Successfully added another quote from '{0}', dawg.", existingAuthor.Name));
-                    }
-                    else
-                    {
-                        await e.Channel.SendMessage(String.Format("Successfully added quote from '{0}', dawg.", args[0]));
-                    }
+                        var args = e.GetArg("text").Split('|');
+                        Author existingAuthor = Beta.QuoteRepository.GetAuthor(args[0]);
+                        Beta.QuoteRepository.AddQuote(args[0], args[1], e.User.Name);
 
-                    // Save after every add
-                    Beta.QuoteRepository.Save();
+                        if (existingAuthor != null)
+                        {
+                            await
+                                e.Channel.SendMessage(String.Format(
+                                    "Successfully added another quote from '{0}', dawg.", existingAuthor.Name));
+                        }
+                        else
+                        {
+                            await
+                                e.Channel.SendMessage(String.Format("Successfully added quote from '{0}', dawg.",
+                                    args[0]));
+                        }
+
+                        // Save after every add
+                        Beta.QuoteRepository.Save();
+                    }
                 });
             });
        }

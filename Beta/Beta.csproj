@@ -126,6 +126,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuoteRepository.cs" />
+    <Compile Include="Repository\ServerStateRepository.cs" />
     <Compile Include="Repository\GamertagRepository.cs" />
     <Compile Include="Repository\UserStateRepository.cs" />
     <Compile Include="Utils\Faces.cs" />

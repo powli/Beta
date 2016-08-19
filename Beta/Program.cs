@@ -47,7 +47,8 @@ namespace Beta
         }
         public static GamertagRepository GamertagRepository { get; private set; }
         public static QuoteRepository QuoteRepository{get;private set;}
-        public static ChannelStateRepository ChannelStateRepository{get;private set;}
+        public static ChannelStateRepository ChannelStateRepository {get;private set;}
+        public static ServerStateRepository ServerStateRepository { get; set; }
         public static UserStateRepository UserStateRepository { get; private set; }
 
         public List<List<String>> TableFlipResponses { get; private set; }
@@ -101,23 +102,19 @@ namespace Beta
                 else
                     _client.Log.Info(">>Message", $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name},{e.User.Id}> {e.Message.Text}");
 
-            if ( Regex.IsMatch(e.Message.Text, @"[)ʔ）][╯ノ┛].+┻━┻"))
+            if ( Regex.IsMatch(e.Message.Text, @"[)ʔ）][╯ノ┛].+┻━┻") && CheckModuleState(e.Server.Id, e.Channel.Id, "table") ) 
             {
-                Console.WriteLine("Testing");
                 int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 1);
-                Console.WriteLine("1");
                 e.Channel.SendMessage("┬─┬  ノ( º _ ºノ) ");
-                Console.WriteLine("2");
                 e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
-                Console.WriteLine("3");
             }
-            else if (e.Message.Text == "(ノಠ益ಠ)ノ彡┻━┻")
+            else if (e.Message.Text == "(ノಠ益ಠ)ノ彡┻━┻" && CheckModuleState(e.Server.Id, e.Channel.Id, "table"))
              {
                 int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 2);
                 e.Channel.SendMessage("┬─┬  ノ(ಠ益ಠノ)");
                 e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
             }
-            else if (e.Message.Text == "┻━┻ ︵ヽ(`Д´)ﾉ︵ ┻━┻")
+            else if (e.Message.Text == "┻━┻ ︵ヽ(`Д´)ﾉ︵ ┻━┻" && CheckModuleState(e.Server.Id, e.Channel.Id, "table"))
             {
                 int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 3);
                 e.Channel.SendMessage("┬─┬  ノ(`Д´ノ)");
@@ -134,6 +131,7 @@ namespace Beta
                     if (!Beta.ChannelStateRepository.VerifyChannelExists(chnl.Id) && chnl.Type.Value.ToLower() == "text")
                         Beta.ChannelStateRepository.AddChannel(chnl, e.Server);
                 }
+                Beta.ServerStateRepository.AddServer(e.Server);
             };
 
             _client.AddModule<ServerModule>("Standard", ModuleFilter.None);
@@ -147,6 +145,7 @@ namespace Beta
                 await _client.Connect(Config.Token);
                 QuoteRepository = QuoteRepository.LoadFromDisk();
                 ChannelStateRepository = ChannelStateRepository.LoadFromDisk();
+                ServerStateRepository = ServerStateRepository.LoadFromDisk();
                 GamertagRepository = GamertagRepository.LoadFromDisk();
                 UserStateRepository = UserStateRepository.LoadFromDisk();
 
@@ -243,6 +242,33 @@ namespace Beta
 
             
 
+        }
+
+        public static bool CheckModuleState(ulong srvrid, ulong chnlid, string module)
+        {
+            ServerState srvr = ServerStateRepository.GetServerState(srvrid);
+            ChannelState chnl = ChannelStateRepository.GetChannelState(chnlid);
+            switch (module.ToLower())
+            {
+                case "ask":
+                    return (srvr.AskEnabled || chnl.AskEnabled);
+                case "comic":
+                    return (srvr.ComicModuleEnabled || chnl.ComicModuleEnabled);
+                case "gamertag":
+                    return (srvr.GamertagModuleEnabled || chnl.GamertagModuleEnabled);
+                case "motd":
+                    return (srvr.MOTDEnabled || chnl.MOTDEnabled);
+                case "quote":
+                    return (srvr.QuoteModuleEnabled || chnl.QuoteModuleEnabled);
+                case "roll":
+                    return (srvr.RollEnabled || chnl.RollEnabled);
+                case "table":
+                    return (srvr.TableUnflipEnabled || chnl.TableUnflipEnabled);
+                case "twitter":
+                    return (srvr.TwitterModuleEnabled || chnl.TwitterModuleEnabled);
+                default:
+                    return false;
+            }
         }
 
         private string GetTableFlipResponse(int points, string Username)

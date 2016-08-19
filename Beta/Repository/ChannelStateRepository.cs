@@ -104,7 +104,62 @@ namespace Beta.Repository
         public bool MOTDSet { get; set; } = false;
 
         [XmlAttribute]
-        public bool GreetMode { get; set; } = false;
+        public bool MOTDEnabled { get; set; } = false;
+
+        [XmlAttribute]
+        public bool RollEnabled { get; set; } = false;
+
+        [XmlAttribute]
+        public bool AskEnabled { get; set; } = false;
+
+        [XmlAttribute]
+        public bool TableUnflipEnabled { get; set; } = false;
+
+        [XmlAttribute]
+        public bool QuoteModuleEnabled { get; set; } = false;
+
+        [XmlAttribute]
+        public bool TwitterModuleEnabled { get; set; } = false;
+
+        [XmlAttribute]
+        public bool ComicModuleEnabled { get; set; } = false;
+
+        [XmlAttribute]
+        public bool GamertagModuleEnabled { get; set; } = false;
+
+        public bool ToggleFeatureBool(string module)
+        {
+            switch (module)
+            {
+                case "ask":
+                    this.AskEnabled = !this.AskEnabled;
+                    return this.AskEnabled;
+                case "motd":
+                    this.MOTDEnabled = !this.MOTDEnabled;
+                    return this.MOTDEnabled;
+                case "roll":
+                    this.RollEnabled = !this.RollEnabled;
+                    return this.RollEnabled;
+                case "quote":
+                    this.QuoteModuleEnabled = !this.QuoteModuleEnabled;
+                    return this.QuoteModuleEnabled;
+                case "table":
+                    this.TableUnflipEnabled = !this.TableUnflipEnabled;
+                    return this.TableUnflipEnabled;
+                case "twitter":
+                    this.TwitterModuleEnabled = !this.TwitterModuleEnabled;
+                    return this.TwitterModuleEnabled;
+                case "comic":
+                    this.ComicModuleEnabled = !this.ComicModuleEnabled;
+                    return this.ComicModuleEnabled;
+                case "gamertag":
+                    this.GamertagModuleEnabled = !this.GamertagModuleEnabled;
+                    return this.GamertagModuleEnabled;
+                default:
+                    return false;
+            }
+
+        }
 
         /*public List<string> Greetings { get; set; } = new List<string>()
         {
