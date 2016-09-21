@@ -5,8 +5,7 @@ using Discord.Modules;
 using System;
 using System.Linq;
 using Tweetinvi;
-using Tweetinvi.Core.Authentication;
-using Tweetinvi.Core.Parameters;
+using Tweetinvi.Models;
 
 namespace Beta.Modules
 {

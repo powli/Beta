@@ -109,7 +109,7 @@ namespace Beta.Modules
                                                                                                                                                     */
                 /*                                                                                                                                  */
 
-                cgb.CreateCommand("list")                    
+                cgb.CreateCommand("glist")                    
                     .Description("Returns a list of every stored Gamertag.")
                     .Do(async e =>
                     {
@@ -217,7 +217,7 @@ namespace Beta.Modules
                     });
 
                 cgb.CreateCommand("remove")
-                    .Description("Removes the specified gamertag. Please provide the GamertagID, which can be retrieved using the '!retrieve' command.")
+                    .Description("Removes the specified gamertag. Please provide the GamertagID, which can be retrieved using the '$retrieve' command.")
                     .Parameter("ID", ParameterType.Required)
                     .Do(async e =>{
                                       if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "gamertag"))

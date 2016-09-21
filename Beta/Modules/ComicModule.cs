@@ -47,7 +47,7 @@ namespace Beta.Modules
                 cgb.MinPermissions((int)PermissionLevel.User);
 
                 cgb.CreateCommand("xkcd")
-                .Description("Post either the latest comic from XKCD, or the specified comic.")
+                .Description("Post either the latest comic from XKCD, or the specified comic number. rnd will provide a random comic.")
                 .Parameter("comic", ParameterType.Optional)
                 .Do(async e =>
                 {

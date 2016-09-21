@@ -50,7 +50,7 @@ namespace Beta.Modules
                 });
 
                 cgb.CreateCommand("list")
-                .Description("Return a numbered list of all quotes")
+                .Description("Return a numbered list of all quotes. Will be sent as a PM.")
                 .Parameter("speaker", ParameterType.Unparsed)                
                 .Do(async e =>
                 {
@@ -77,7 +77,7 @@ namespace Beta.Modules
                 });
 
                 cgb.CreateCommand("delete")
-                .Description("Return a numbered list of all quotes")
+                .Description("Delete the specified quote, by number, for the specified author. EX) '$delete Beta|1' would delete the first quote by Beta. Please use the 'List' command to retrieve quote numbers.")
                 .Parameter("text", ParameterType.Unparsed)
                 .MinPermissions((int)PermissionLevel.ChannelModerator)
                 .Do(async e =>
@@ -112,14 +112,14 @@ namespace Beta.Modules
                 });
 
                 cgb.CreateCommand("quotable")
-                .Description("Return a list of all speakers we have stored quotes for")
+                .Description("Return a list of all speakers we have stored quotes for. Will be sent as a PM.")
                 .Do(async e =>
                 {
                     if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "quote"))
                     {
-                        await e.Channel.SendMessage("Oh yeah sure one sec... I got quotes for all these guys: ");
+                        await e.User.SendMessage("Oh yeah sure one sec... I got quotes for all these guys: ");
                         Beta.QuoteRepository.Authors = Beta.QuoteRepository.Authors.OrderBy(item => item.Name).ToList();
-                        await e.Channel.SendMessage(string.Join(Environment.NewLine, Beta.QuoteRepository.Authors));
+                        await e.User.SendMessage(string.Join(Environment.NewLine, Beta.QuoteRepository.Authors));
                     }
                 });
 

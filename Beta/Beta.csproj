@@ -35,27 +35,27 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Autofac, Version=3.5.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
-      <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
+    <Reference Include="Autofac, Version=4.1.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <HintPath>..\packages\Autofac.4.1.0\lib\net45\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="DartBot">
       <HintPath>F:\Bobby Development Resources\Discord Bot Resources\DartBot.dll</HintPath>
     </Reference>
-    <Reference Include="Discord.Net, Version=0.9.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Discord.Net.0.9.0-rc3-3\lib\net45\Discord.Net.dll</HintPath>
+    <Reference Include="Discord.Net, Version=0.9.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.0.9.4\lib\net45\Discord.Net.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Discord.Net.Audio, Version=0.9.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Discord.Net.Audio.0.9.0-rc3\lib\net45\Discord.Net.Audio.dll</HintPath>
+    <Reference Include="Discord.Net.Audio, Version=0.9.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.Audio.0.9.4\lib\net45\Discord.Net.Audio.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Discord.Net.Commands, Version=0.9.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Discord.Net.Commands.0.9.0-rc3-1\lib\net45\Discord.Net.Commands.dll</HintPath>
+    <Reference Include="Discord.Net.Commands, Version=0.9.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.Commands.0.9.4\lib\net45\Discord.Net.Commands.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Discord.Net.Modules, Version=0.9.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Discord.Net.Modules.0.9.0-rc3\lib\net45\Discord.Net.Modules.dll</HintPath>
+    <Reference Include="Discord.Net.Modules, Version=0.9.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.Modules.0.9.4\lib\net45\Discord.Net.Modules.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Threading.Tasks, Version=1.0.12.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -70,8 +70,8 @@
       <HintPath>..\packages\Microsoft.Bcl.Async.1.0.168\lib\net40\Microsoft.Threading.Tasks.Extensions.Desktop.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Nito.AsyncEx, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
@@ -102,8 +102,8 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Xml" />
-    <Reference Include="Tweetinvi, Version=0.9.12.2, Culture=neutral, PublicKeyToken=7247f14397bf67b9, processorArchitecture=MSIL">
-      <HintPath>..\packages\TweetinviAPI.0.9.12.2\lib\net45\Tweetinvi.dll</HintPath>
+    <Reference Include="Tweetinvi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7247f14397bf67b9, processorArchitecture=MSIL">
+      <HintPath>..\packages\TweetinviAPI.1.0\lib\net45\Tweetinvi.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="WebSocket4Net, Version=0.14.1.0, Culture=neutral, PublicKeyToken=eb4e154b696bf72a, processorArchitecture=MSIL">
@@ -113,6 +113,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Modules\GamertagModule.cs" />
+    <Compile Include="Modules\NoteModule.cs" />
     <Compile Include="Repository\ChannelStateRepository.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="ExtensionMethod.cs" />
@@ -126,6 +127,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuoteRepository.cs" />
+    <Compile Include="Repository\NoteRepository.cs" />
     <Compile Include="Repository\ServerStateRepository.cs" />
     <Compile Include="Repository\GamertagRepository.cs" />
     <Compile Include="Repository\UserStateRepository.cs" />

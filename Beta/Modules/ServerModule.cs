@@ -17,7 +17,7 @@ namespace Beta.Modules
         private ModuleManager _manager;
 
         public override string Prefix { get; } = Beta.Config.CommandPrefixes.Standard;
-        public List<string> TogglableCommands = new List<string>() { "ask", "motd", "roll", "quote", "table", "twitter", "comic", "gamertag" };
+        public List<string> TogglableCommands = new List<string>() { "ask", "motd", "roll", "quote", "table", "twitter", "comic", "gamertag", "note" };
 
         public override void Install(ModuleManager manager)
         {
@@ -273,10 +273,11 @@ namespace Beta.Modules
                             msg += "Comic  :  " + srvr.ComicModuleEnabled + "\n";
                             msg += "Gamertag  :  " + srvr.GamertagModuleEnabled + "\n";
                             msg += "MotD  :  " + srvr.MOTDEnabled + "\n";
+                            msg += "Note : " + srvr.NoteModuleEnabled + "\n";
                             msg += "Quote  :  " + srvr.QuoteModuleEnabled + "\n";
                             msg += "Roll  :  " + srvr.RollEnabled + "\n";
                             msg += "Table  :  " + srvr.TableUnflipEnabled + "\n";
-                            msg += "Twitter  :  " + srvr.TwitterModuleEnabled + "\n";
+                            msg += "Twitter  :  " + srvr.TwitterModuleEnabled + "\n";                            
                             await e.Channel.SendMessage(msg);
                         }                        
                     });
@@ -294,6 +295,7 @@ namespace Beta.Modules
                             msg += "Comic  :  " + chnl.ComicModuleEnabled + "\n";
                             msg += "Gamertag  :  " + chnl.GamertagModuleEnabled+"\n";
                             msg += "MotD  :  " + chnl.MOTDEnabled + "\n";
+                            msg += "Note : " + chnl.NoteModuleEnabled + "\n";
                             msg += "Quote  :  " + chnl.QuoteModuleEnabled + "\n";
                             msg += "Roll  :  " + chnl.RollEnabled + "\n";
                             msg += "Table  :  " + chnl.TableUnflipEnabled + "\n";

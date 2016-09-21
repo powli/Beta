@@ -14,11 +14,9 @@ using Beta.Repository;
 using Beta.Utils;
 using Newtonsoft.Json;
 using Discord.API.Client.Rest;
-using RestSharp.Extensions;
 using Tweetinvi;
-using Tweetinvi.Core.Authentication;
-using Tweetinvi.Core.Interfaces.Streaminvi;
-using Tweetinvi.Core.Interfaces;
+using Tweetinvi.Models;
+using Tweetinvi.Streaming;
 
 namespace Beta
 {
@@ -28,7 +26,7 @@ namespace Beta
         public static void Main(string[] args) => new Beta().Start(args);
         public static Converter conv = new Converter();
         public string MsgLog = "[{0}] [{1}/{2}] <@{3},{4}> {5} \n";
-        public const string Username = "$Beta 2.2"; //Modify this, and the name will automagically be updated on start-up.
+        public const string Username = "$Beta"; //Modify this, and the name will automagically be updated on start-up.
         public static List<Channel> _TwitterAuthorizedChannels { get; set; } = new List<Channel>();
         IUserStream stream = Tweetinvi.Stream.CreateUserStream();
        
@@ -139,6 +137,7 @@ namespace Beta
             _client.AddModule<TwitterModule>("Twitter", ModuleFilter.None);
             _client.AddModule<ComicModule>("Comics", ModuleFilter.None);
             _client.AddModule<GamertagModule>("Gamertag", ModuleFilter.None);
+            _client.AddModule<NoteModule>("Note", ModuleFilter.None);
 
             _client.ExecuteAndWait(async () =>
             {
@@ -266,6 +265,8 @@ namespace Beta
                     return (srvr.TableUnflipEnabled || chnl.TableUnflipEnabled);
                 case "twitter":
                     return (srvr.TwitterModuleEnabled || chnl.TwitterModuleEnabled);
+                case "note":
+                    return (srvr.NoteModuleEnabled || chnl.NoteModuleEnabled);
                 default:
                     return false;
             }

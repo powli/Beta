@@ -126,6 +126,8 @@ namespace Beta.Repository
 
         [XmlAttribute]
         public bool GamertagModuleEnabled { get; set; } = false;
+        [XmlAttribute]
+        public bool NoteModuleEnabled { get; set; } = false;
 
         public bool ToggleFeatureBool(string module)
         {
@@ -155,6 +157,9 @@ namespace Beta.Repository
                 case "gamertag":
                     this.GamertagModuleEnabled = !this.GamertagModuleEnabled;
                     return this.GamertagModuleEnabled;
+                case "note":
+                    this.NoteModuleEnabled = !this.NoteModuleEnabled;
+                    return this.NoteModuleEnabled;
                 default:
                     return false;
             }

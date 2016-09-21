@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Discord;
 
@@ -30,6 +28,7 @@ namespace Beta.Repository
                 {
                   ServerID   = srvr.Id,
                   ServerName = srvr.Name,
+                  NoteRepository = new NoteRepository()
 
                 });
             }
@@ -78,7 +77,7 @@ namespace Beta.Repository
     }
 
     public class ServerState
-    {
+    {        
         [XmlAttribute]
         public ulong ServerID { get; set;}
 
@@ -109,6 +108,12 @@ namespace Beta.Repository
         [XmlAttribute]
         public bool GamertagModuleEnabled { get; set; } = false;
 
+        [XmlAttribute]
+        public bool NoteModuleEnabled { get; set; } = false;
+
+        [XmlElement]
+        public NoteRepository NoteRepository { get; set; }
+
         public bool ToggleFeatureBool(string module)
         {
             switch (module)
@@ -136,7 +141,10 @@ namespace Beta.Repository
                     return this.ComicModuleEnabled;                  
                 case "gamertag":
                     this.GamertagModuleEnabled = !this.GamertagModuleEnabled;
-                    return this.GamertagModuleEnabled;                    
+                    return this.GamertagModuleEnabled;
+                case "note":
+                    this.NoteModuleEnabled = !this.NoteModuleEnabled;
+                    return this.NoteModuleEnabled;
                 default:
                     return false;
             }
