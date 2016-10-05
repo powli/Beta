@@ -30,7 +30,7 @@ namespace Beta.Modules
                     .Parameter("text", ParameterType.Multiple)
                     .Do(async e =>
                     {
-                        if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "gamertag"))
+                        if (Beta.CheckModuleState(e, "gamertag", e.Channel.IsPrivate))
                         {
                             switch (e.Args[0].ToLower())
                             {
@@ -113,7 +113,7 @@ namespace Beta.Modules
                     .Description("Returns a list of every stored Gamertag.")
                     .Do(async e =>
                     {
-                        if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "gamertag"))
+                        if (Beta.CheckModuleState(e, "gamertag", e.Channel.IsPrivate))
                         {
                             bool anyExist = false;
                             string list = "";
@@ -193,7 +193,7 @@ namespace Beta.Modules
                     .Description("Returns all of the Gamertags stored for specified Discord user.")
                     .Parameter("text", ParameterType.Required)
                     .Do(async e =>{
-                                      if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "gamertag"))
+                                      if (Beta.CheckModuleState(e, "gamertag", e.Channel.IsPrivate))
                                       {
                                           bool found = false;
                                           string retrieved = "";
@@ -220,7 +220,7 @@ namespace Beta.Modules
                     .Description("Removes the specified gamertag. Please provide the GamertagID, which can be retrieved using the '$retrieve' command.")
                     .Parameter("ID", ParameterType.Required)
                     .Do(async e =>{
-                                      if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "gamertag"))
+                                      if (Beta.CheckModuleState(e, "gamertag", e.Channel.IsPrivate))
                                       {
                                           int id;
                                           if (Int32.TryParse(e.GetArg("ID"), out id))

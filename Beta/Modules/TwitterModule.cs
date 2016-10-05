@@ -30,7 +30,7 @@ namespace Beta.Modules
                 .Parameter("text", ParameterType.Unparsed)
                 .Do(async e =>
                 {
-                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "twitter"))
+                    if (Beta.CheckModuleState(e, "twitter", e.Channel.IsPrivate))
                     {
                         string tweet = e.GetArg("text");
                         if (System.Text.RegularExpressions.Regex.IsMatch(tweet, "<@d{16}>"))
@@ -62,7 +62,7 @@ namespace Beta.Modules
                 .Parameter("user", ParameterType.Required)
                 .Do(async e =>
                 {
-                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "twitter"))
+                    if (Beta.CheckModuleState(e, "twitter", e.Channel.IsPrivate))
                     {
                         var User = new UserIdentifier(e.GetArg("user"));
                         if (User == null)

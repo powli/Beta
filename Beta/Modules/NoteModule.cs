@@ -28,7 +28,7 @@ namespace Beta.Modules
                 .Parameter("name", ParameterType.Unparsed)
                 .Do(async e =>
                 {
-                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "note"))
+                    if (Beta.CheckModuleState(e, "note", e.Channel.IsPrivate))
                     {
                         NoteRepository noteRepository =
                             Beta.ServerStateRepository.GetServerState(e.Server.Id).NoteRepository;
@@ -46,7 +46,7 @@ namespace Beta.Modules
                 .Description("Return all server notes.")
                 .Do(async e =>
                 {
-                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "note"))
+                    if (Beta.CheckModuleState(e, "note", e.Channel.IsPrivate))
                     {
                         NoteRepository noteRepository =
                             Beta.ServerStateRepository.GetServerState(e.Server.Id).NoteRepository;
@@ -67,7 +67,7 @@ namespace Beta.Modules
                 .MinPermissions((int)PermissionLevel.ChannelModerator)
                 .Do(async e =>
                 {
-                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "note"))
+                    if (Beta.CheckModuleState(e, "note", e.Channel.IsPrivate))
                     {
                         if (
                             Beta.ServerStateRepository.GetServerState(e.Server.Id)
@@ -91,7 +91,7 @@ namespace Beta.Modules
                 .Parameter("text", ParameterType.Unparsed)
                 .Do(async e =>
                 {
-                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "note"))
+                    if (Beta.CheckModuleState(e, "note", e.Channel.IsPrivate))
                     {
                         var args = e.GetArg("text").Split('|');
                         Console.WriteLine("Test");

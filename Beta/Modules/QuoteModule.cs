@@ -32,7 +32,7 @@ namespace Beta.Modules
                 .Parameter("speaker", ParameterType.Unparsed)
                 .Do(async e =>
                 {
-                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "quote"))
+                    if (Beta.CheckModuleState(e, "quote", e.Channel.IsPrivate))
                     {
                         string name = e.GetArg("speaker").Trim();
                         Author author = Beta.QuoteRepository.GetAuthor(name);
@@ -54,7 +54,7 @@ namespace Beta.Modules
                 .Parameter("speaker", ParameterType.Unparsed)                
                 .Do(async e =>
                 {
-                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "quote"))
+                    if (Beta.CheckModuleState(e, "quote", e.Channel.IsPrivate))
                     {
                         string name = e.GetArg("speaker").Trim();
                         Author author = Beta.QuoteRepository.GetAuthor(name);
@@ -82,7 +82,7 @@ namespace Beta.Modules
                 .MinPermissions((int)PermissionLevel.ChannelModerator)
                 .Do(async e =>
                 {
-                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "quote"))
+                    if (Beta.CheckModuleState(e, "quote", e.Channel.IsPrivate))
                     {
                         var args = e.GetArg("text").Split('|');
                         Author existingAuthor = Beta.QuoteRepository.GetAuthor(args[0]);
@@ -115,7 +115,7 @@ namespace Beta.Modules
                 .Description("Return a list of all speakers we have stored quotes for. Will be sent as a PM.")
                 .Do(async e =>
                 {
-                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "quote"))
+                    if (Beta.CheckModuleState(e, "quote", e.Channel.IsPrivate))
                     {
                         await e.User.SendMessage("Oh yeah sure one sec... I got quotes for all these guys: ");
                         Beta.QuoteRepository.Authors = Beta.QuoteRepository.Authors.OrderBy(item => item.Name).ToList();
@@ -127,7 +127,7 @@ namespace Beta.Modules
                 .MinPermissions((int)PermissionLevel.BotOwner)                
                 .Do(e =>
                 {
-                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "quote"))
+                    if (Beta.CheckModuleState(e, "quote", e.Channel.IsPrivate))
                     {
                         Beta.conv.Convert(Beta.QuoteRepository);
                     }
@@ -138,7 +138,7 @@ namespace Beta.Modules
                 .Parameter("text", ParameterType.Unparsed)
                 .Do(async e =>
                 {
-                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "quote"))
+                    if (Beta.CheckModuleState(e, "quote", e.Channel.IsPrivate))
                     {
                         var args = e.GetArg("text").Split('|');
                         Author existingAuthor = Beta.QuoteRepository.GetAuthor(args[0]);
@@ -173,5 +173,6 @@ namespace Beta.Modules
             }
             return String.Join(" ", temparr);            
         }
+       
     }
 }

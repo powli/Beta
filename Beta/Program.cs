@@ -76,7 +76,7 @@ namespace Beta
             {
                 x.AppName = AppName;
                 x.MessageCacheSize = 10;
-                x.EnablePreUpdateEvents = true;
+                x.EnablePreUpdateEvents = true;                
             })
             .UsingCommands(x =>
             {
@@ -93,32 +93,43 @@ namespace Beta
             _client.Log.Message += (s, e) => WriteLog(e);
             _client.MessageReceived += (s, e) =>
             {
+                ChannelState chnlstate = ChannelStateRepository.GetChannelState(e.Channel.Id);                
                 UserStateRepository.AddUser(e.User);
-                //if (!e.Channel.IsPrivate) LogToFile(e.Server, e.Channel, e.User, e.Message.Text);
+                
+                if (!e.Channel.IsPrivate) LogToFile(e.Server, e.Channel, e.User, e.Message.Text);
                 if (e.Message.IsAuthor)
                     _client.Log.Info("<<Message", $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name},{e.User.Id}> {e.Message.Text}");
                 else
                     _client.Log.Info(">>Message", $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name},{e.User.Id}> {e.Message.Text}");
 
-            if ( Regex.IsMatch(e.Message.Text, @"[)ʔ）][╯ノ┛].+┻━┻") && CheckModuleState(e.Server.Id, e.Channel.Id, "table") ) 
+            if ( Regex.IsMatch(e.Message.Text, @"[)ʔ）][╯ノ┛].+┻━┻") && CheckModuleState(e, "table", e.Channel.IsPrivate) ) 
             {
                 int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 1);
                 e.Channel.SendMessage("┬─┬  ノ( º _ ºノ) ");
                 e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
             }
-            else if (e.Message.Text == "(ノಠ益ಠ)ノ彡┻━┻" && CheckModuleState(e.Server.Id, e.Channel.Id, "table"))
+            else if (e.Message.Text == "(ノಠ益ಠ)ノ彡┻━┻" && CheckModuleState(e, "table", e.Channel.IsPrivate))
              {
                 int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 2);
                 e.Channel.SendMessage("┬─┬  ノ(ಠ益ಠノ)");
                 e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
             }
-            else if (e.Message.Text == "┻━┻ ︵ヽ(`Д´)ﾉ︵ ┻━┻" && CheckModuleState(e.Server.Id, e.Channel.Id, "table"))
+            else if (e.Message.Text == "┻━┻ ︵ヽ(`Д´)ﾉ︵ ┻━┻" && CheckModuleState(e, "table", e.Channel.IsPrivate))
             {
                 int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 3);
                 e.Channel.SendMessage("┬─┬  ノ(`Д´ノ)");
                 e.Channel.SendMessage("(/¯`Д´ )/¯ ┬─┬");
                 e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name) );
             }
+            else if (e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0 && CheckModuleState(e, "table", e.Channel.IsPrivate))
+            {
+                e.Channel.SendMessage(chnlstate.ChattyRepo.GetRandom());                
+            }
+            if (!e.User.IsBot && !(e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0) )
+            {
+                chnlstate.AddMessageToChattyRepo(e.Message.Text);
+            }
+            
         };
            
 
@@ -243,8 +254,43 @@ namespace Beta
 
         }
 
-        public static bool CheckModuleState(ulong srvrid, ulong chnlid, string module)
+        public static bool CheckModuleState(CommandEventArgs e, string module, bool isDirectMessage)
         {
+            ulong srvrid = e.Server.Id;
+            ulong chnlid = e.Channel.Id;
+            if (isDirectMessage) return true;
+            ServerState srvr = ServerStateRepository.GetServerState(srvrid);
+            ChannelState chnl = ChannelStateRepository.GetChannelState(chnlid);
+            switch (module.ToLower())
+            {
+                case "ask":
+                    return (srvr.AskEnabled || chnl.AskEnabled);
+                case "comic":
+                    return (srvr.ComicModuleEnabled || chnl.ComicModuleEnabled);
+                case "gamertag":
+                    return (srvr.GamertagModuleEnabled || chnl.GamertagModuleEnabled);
+                case "motd":
+                    return (srvr.MOTDEnabled || chnl.MOTDEnabled);
+                case "quote":
+                    return (srvr.QuoteModuleEnabled || chnl.QuoteModuleEnabled);
+                case "roll":
+                    return (srvr.RollEnabled || chnl.RollEnabled);
+                case "table":
+                    return (srvr.TableUnflipEnabled || chnl.TableUnflipEnabled);
+                case "twitter":
+                    return (srvr.TwitterModuleEnabled || chnl.TwitterModuleEnabled);
+                case "note":
+                    return (srvr.NoteModuleEnabled || chnl.NoteModuleEnabled);
+                default:
+                    return false;
+            }
+        }
+
+        public static bool CheckModuleState(MessageEventArgs e, string module, bool isDirectMessage)
+        {
+            ulong srvrid = e.Server.Id;
+            ulong chnlid = e.Channel.Id;
+            if (isDirectMessage) return true;
             ServerState srvr = ServerStateRepository.GetServerState(srvrid);
             ChannelState chnl = ChannelStateRepository.GetChannelState(chnlid);
             switch (module.ToLower())

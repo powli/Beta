@@ -51,7 +51,7 @@ namespace Beta.Modules
                 .Parameter("comic", ParameterType.Optional)
                 .Do(async e =>
                 {
-                    if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "comic"))
+                    if (Beta.CheckModuleState(e, "comic", e.Channel.IsPrivate))
                     {
                         if (e.GetArg("comic") == "")
                         {

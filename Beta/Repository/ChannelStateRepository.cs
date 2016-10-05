@@ -124,10 +124,24 @@ namespace Beta.Repository
         [XmlAttribute]
         public bool ComicModuleEnabled { get; set; } = false;
 
+        public List<string> ChattyRepo { get; set; }
+
         [XmlAttribute]
         public bool GamertagModuleEnabled { get; set; } = false;
         [XmlAttribute]
         public bool NoteModuleEnabled { get; set; } = false;
+
+        public bool BetaCanSpeak { get; set; } = true;
+
+        public void EnableBetaSpeak()
+        {
+            BetaCanSpeak = true;
+        }
+
+        public void DisableBetaSpeak()
+        {
+            BetaCanSpeak = false;
+        }
 
         public bool ToggleFeatureBool(string module)
         {
@@ -166,6 +180,15 @@ namespace Beta.Repository
 
         }
 
+        public void AddMessageToChattyRepo(string msg)
+        {
+            ChattyRepo.Add(msg);
+            if (ChattyRepo.Count > 400)
+            {
+                ChattyRepo.RemoveAt(0);
+            }
+                         
+        }
         /*public List<string> Greetings { get; set; } = new List<string>()
         {
             "Sup, homie?",

@@ -37,6 +37,7 @@ namespace Beta.Modules
                     {
                         await e.Channel.SendMessage(e.GetArg("text"));
                         await e.Message.Delete();
+                        
                     });
 
                 cgb.CreateCommand("setmotd")
@@ -77,7 +78,7 @@ namespace Beta.Modules
                     .Parameter("roll", ParameterType.Unparsed)
                     .Do(async e =>
                     {
-                        if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "roll"))
+                        if (Beta.CheckModuleState(e, "roll", e.Channel.IsPrivate))
                         {
                             var arg = e.GetArg("roll");
                             var arguments = arg.Split('d').Where(s => !string.IsNullOrEmpty(s)).ToList();
@@ -184,7 +185,7 @@ namespace Beta.Modules
                     .Parameter("text", ParameterType.Unparsed)
                     .Do(async e =>
                     {
-                        if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "ask"))
+                        if (Beta.CheckModuleState(e, "ask", e.Channel.IsPrivate))
                         {
                             await e.Channel.SendMessage(Configuration._8BallResponses.GetRandom());
                         }
@@ -195,7 +196,7 @@ namespace Beta.Modules
                     .Description("Show the MotD for the current channel")
                     .Do(async e=>
                     {
-                        if (Beta.CheckModuleState(e.Server.Id, e.Channel.Id, "motd"))
+                        if (Beta.CheckModuleState(e, "motd", e.Channel.IsPrivate))
                         {
                             if (Beta.ChannelStateRepository.VerifyChannelExists(e.Channel.Id))
                             {
