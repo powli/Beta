@@ -17,7 +17,7 @@ namespace Beta.Modules
         private ModuleManager _manager;
 
         public override string Prefix { get; } = Beta.Config.CommandPrefixes.Standard;
-        public List<string> TogglableCommands = new List<string>() { "ask", "motd", "roll", "quote", "table", "twitter", "comic", "gamertag", "note" };
+        public List<string> TogglableCommands = new List<string>() { "ask", "motd", "roll", "quote", "table", "twitter", "comic", "gamertag", "note", "politics" };
 
         public override void Install(ModuleManager manager)
         {
@@ -278,7 +278,8 @@ namespace Beta.Modules
                             msg += "Quote  :  " + srvr.QuoteModuleEnabled + "\n";
                             msg += "Roll  :  " + srvr.RollEnabled + "\n";
                             msg += "Table  :  " + srvr.TableUnflipEnabled + "\n";
-                            msg += "Twitter  :  " + srvr.TwitterModuleEnabled + "\n";                            
+                            msg += "Twitter  :  " + srvr.TwitterModuleEnabled + "\n";
+                            msg += "Politics : " + srvr.PoliticsEnabled + "\n";
                             await e.Channel.SendMessage(msg);
                         }                        
                     });
@@ -301,6 +302,7 @@ namespace Beta.Modules
                             msg += "Roll  :  " + chnl.RollEnabled + "\n";
                             msg += "Table  :  " + chnl.TableUnflipEnabled + "\n";
                             msg += "Twitter  :  " + chnl.TwitterModuleEnabled + "\n";
+                            msg += "Politics : " + chnl.PoliticsEnabled + "\n";
                             await e.Channel.SendMessage(msg);
                         }
                     });

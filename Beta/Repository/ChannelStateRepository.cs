@@ -130,6 +130,8 @@ namespace Beta.Repository
         public bool GamertagModuleEnabled { get; set; } = false;
         [XmlAttribute]
         public bool NoteModuleEnabled { get; set; } = false;
+        [XmlAttribute]
+        public bool PoliticsEnabled { get; set; } = false;
 
         public bool BetaCanSpeak { get; set; } = true;
 
@@ -174,6 +176,9 @@ namespace Beta.Repository
                 case "note":
                     this.NoteModuleEnabled = !this.NoteModuleEnabled;
                     return this.NoteModuleEnabled;
+                case "politics":
+                    PoliticsEnabled = !PoliticsEnabled;
+                    return PoliticsEnabled;
                 default:
                     return false;
             }
@@ -182,12 +187,13 @@ namespace Beta.Repository
 
         public void AddMessageToChattyRepo(string msg)
         {
+            if (msg.StartsWith("$")) return; //Ignore Commands
+            
             ChattyRepo.Add(msg);
             if (ChattyRepo.Count > 400)
             {
                 ChattyRepo.RemoveAt(0);
-            }
-                         
+            }                                              
         }
         /*public List<string> Greetings { get; set; } = new List<string>()
         {

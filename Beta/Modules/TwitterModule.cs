@@ -4,8 +4,10 @@ using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using System;
 using System.Linq;
+using CsvHelper;
 using Tweetinvi;
 using Tweetinvi.Models;
+using Tweet = Tweetinvi.Tweet;
 
 namespace Beta.Modules
 {
@@ -13,9 +15,8 @@ namespace Beta.Modules
     {
         private DiscordClient _client;
         private ModuleManager _manager;
-        
 
-        public override string Prefix { get; } = "$";
+    public override string Prefix { get; } = "$";
 
         public override void Install(ModuleManager manager)
         {
@@ -52,9 +53,19 @@ namespace Beta.Modules
                             tweet = String.Join(" ", arg);
                         }
                         Auth.SetUserCredentials(Beta.Config.TwitterConsumerKey, Beta.Config.TwitterConsumerSecret, Beta.Config.TwitterAccessToken, Beta.Config.TwitterAccessSecret);
-                        if (Tweet.PublishTweet(e.GetArg("text")) == null) await e.Channel.SendMessage("Something went wrong... I didn't send that tweet for you.");
+                        if (Tweetinvi.Tweet.PublishTweet(e.GetArg("text")) == null) await e.Channel.SendMessage("Something went wrong... I didn't send that tweet for you.");
                         else await e.Channel.SendMessage("I sent that tweet for you! Hopefully people like it!");
                     }                     
+                });
+
+                cgb.CreateCommand("test")
+                .Description("Test for HillaryTrumpBot!")
+                .Do(async e =>
+                {
+                    var theDonald = Tweetinvi.User.GetUserFromId(25073877);                    
+                    await e.Channel.SendMessage("Donald Trump has "+Timeline.GetUserTimeline(theDonald.ScreenName, 33000).Count()      +" Tweets!");
+                    var presidentClinton = Tweetinvi.User.GetUserFromId(1339835893);
+                    await e.Channel.SendMessage("Hillary Clinton has " + Timeline.GetUserTimeline(presidentClinton.ScreenName, 9000).Count() + " Tweets!");
                 });
 
                 cgb.CreateCommand("Follow")

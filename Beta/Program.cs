@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Text;
 using Discord;
@@ -7,14 +8,18 @@ using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using System.IO;
+using System.Linq.Expressions;
 using System.Text.RegularExpressions;
+using System.Xml;
 using Beta.Modules;
 using Beta.JSONConfig;
 using Beta.Repository;
 using Beta.Utils;
 using Newtonsoft.Json;
 using Discord.API.Client.Rest;
+using TextMarkovChains;
 using Tweetinvi;
+using Tweetinvi.Core.Helpers;
 using Tweetinvi.Models;
 using Tweetinvi.Streaming;
 
@@ -22,19 +27,18 @@ namespace Beta
 {
     class Beta
     {
-        
         public static void Main(string[] args) => new Beta().Start(args);
         public static Converter conv = new Converter();
         public string MsgLog = "[{0}] [{1}/{2}] <@{3},{4}> {5} \n";
         public const string Username = "$Beta"; //Modify this, and the name will automagically be updated on start-up.
         public static List<Channel> _TwitterAuthorizedChannels { get; set; } = new List<Channel>();
         IUserStream stream = Tweetinvi.Stream.CreateUserStream();
-       
+
         private const string AppName = "$Beta"; // Change this to the name of your bot
         public static Configuration Config { get; set; }
-        private DiscordClient _client;     
-            
-        public event EventHandler<QuoteAddedEventArgs> QuoteAdded;        
+        private DiscordClient _client;
+
+        public event EventHandler<QuoteAddedEventArgs> QuoteAdded;
 
         protected void OnQuoteAdded(QuoteAddedEventArgs e)
         {
@@ -43,23 +47,25 @@ namespace Beta
                 QuoteAdded(this, e);
             }
         }
+
         public static GamertagRepository GamertagRepository { get; private set; }
-        public static QuoteRepository QuoteRepository{get;private set;}
-        public static ChannelStateRepository ChannelStateRepository {get;private set;}
+        public static QuoteRepository QuoteRepository { get; private set; }
+        public static ChannelStateRepository ChannelStateRepository { get; private set; }
         public static ServerStateRepository ServerStateRepository { get; set; }
         public static UserStateRepository UserStateRepository { get; private set; }
-
+        public static TwitterXMLRepository TwitterXmlRepository { get; private set; }
+        public static MultiDeepMarkovChain MarkovChainRepository { get; private set; }
+        public static MultiDeepMarkovChain TrumpMarkovChain { get; private set; }
+        public static MultiDeepMarkovChain HillaryMarkovChain { get; private set; }
+        public static int numpost = 0;
         public List<List<String>> TableFlipResponses { get; private set; }
-
-        
-
 
 
         private void Start(string[] args)
         {
             #region configfile
-            
-           try
+
+            try
             {
                 Config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText("data/config.json"));
             }
@@ -70,68 +76,102 @@ namespace Beta
                 Console.ReadKey();
                 return;
             }
+
             #endregion
 
             _client = new DiscordClient(x =>
             {
                 x.AppName = AppName;
                 x.MessageCacheSize = 10;
-                x.EnablePreUpdateEvents = true;                
+                x.EnablePreUpdateEvents = true;
             })
-            .UsingCommands(x =>
-            {
-                x.AllowMentionPrefix = true;
-                x.PrefixChar = '$';
-                // Please don't use !, there's a million bots that already do.
-                x.HelpMode = HelpMode.Public;
-                x.ExecuteHandler += (s, e) => _client.Log.Info("Command", $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name}> {e.Command.Text} {((e.Args.Length > 0) ? "| " + string.Join(" ", e.Args) : "")}");
-                x.ErrorHandler = CommandError;
-            })
-            .UsingPermissionLevels((u, c) => (int)GetPermissions(u, c))
-            .UsingModules();
+                .UsingCommands(x =>
+                {
+                    x.AllowMentionPrefix = true;
+                    x.PrefixChar = '$';
+                    // Please don't use !, there's a million bots that already do.
+                    x.HelpMode = HelpMode.Public;
+                    x.ExecuteHandler +=
+                        (s, e) =>
+                            _client.Log.Info("Command",
+                                $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name}> {e.Command.Text} {((e.Args.Length > 0) ? "| " + string.Join(" ", e.Args) : "")}");
+                    x.ErrorHandler = CommandError;
+                })
+                .UsingPermissionLevels((u, c) => (int) GetPermissions(u, c))
+                .UsingModules();
 
             _client.Log.Message += (s, e) => WriteLog(e);
             _client.MessageReceived += (s, e) =>
             {
-                ChannelState chnlstate = ChannelStateRepository.GetChannelState(e.Channel.Id);                
+                ChannelStateRepository.AddChannel(e.Channel, e.Server);
                 UserStateRepository.AddUser(e.User);
-                
+
                 if (!e.Channel.IsPrivate) LogToFile(e.Server, e.Channel, e.User, e.Message.Text);
                 if (e.Message.IsAuthor)
-                    _client.Log.Info("<<Message", $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name},{e.User.Id}> {e.Message.Text}");
+                    _client.Log.Info("<<Message",
+                        $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name},{e.User.Id}> {e.Message.Text}");
                 else
-                    _client.Log.Info(">>Message", $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name},{e.User.Id}> {e.Message.Text}");
+                    _client.Log.Info(">>Message",
+                        $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name},{e.User.Id}> {e.Message.Text}");
 
-            if ( Regex.IsMatch(e.Message.Text, @"[)ʔ）][╯ノ┛].+┻━┻") && CheckModuleState(e, "table", e.Channel.IsPrivate) ) 
-            {
-                int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 1);
-                e.Channel.SendMessage("┬─┬  ノ( º _ ºノ) ");
-                e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
-            }
-            else if (e.Message.Text == "(ノಠ益ಠ)ノ彡┻━┻" && CheckModuleState(e, "table", e.Channel.IsPrivate))
-             {
-                int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 2);
-                e.Channel.SendMessage("┬─┬  ノ(ಠ益ಠノ)");
-                e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
-            }
-            else if (e.Message.Text == "┻━┻ ︵ヽ(`Д´)ﾉ︵ ┻━┻" && CheckModuleState(e, "table", e.Channel.IsPrivate))
-            {
-                int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 3);
-                e.Channel.SendMessage("┬─┬  ノ(`Д´ノ)");
-                e.Channel.SendMessage("(/¯`Д´ )/¯ ┬─┬");
-                e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name) );
-            }
-            else if (e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0 && CheckModuleState(e, "table", e.Channel.IsPrivate))
-            {
-                e.Channel.SendMessage(chnlstate.ChattyRepo.GetRandom());                
-            }
-            if (!e.User.IsBot && !(e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0) )
-            {
-                chnlstate.AddMessageToChattyRepo(e.Message.Text);
-            }
-            
-        };
-           
+                if (Regex.IsMatch(e.Message.Text, @"[)ʔ）][╯ノ┛].+┻━┻") &&
+                    CheckModuleState(e, "table", e.Channel.IsPrivate))
+                {
+                    IngestTwitterHistory();
+                    int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 1);
+                    e.Channel.SendMessage("┬─┬  ノ( º _ ºノ) ");
+                    e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
+                }
+                else if (e.Message.Text == "(ノಠ益ಠ)ノ彡┻━┻" && CheckModuleState(e, "table", e.Channel.IsPrivate))
+                {
+                    int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 2);
+                    e.Channel.SendMessage("┬─┬  ノ(ಠ益ಠノ)");
+                    e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
+                }
+                else if (e.Message.Text == "┻━┻ ︵ヽ(`Д´)ﾉ︵ ┻━┻" && CheckModuleState(e, "table", e.Channel.IsPrivate))
+                {
+                    int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 3);
+                    e.Channel.SendMessage("┬─┬  ノ(`Д´ノ)");
+                    e.Channel.SendMessage("(/¯`Д´ )/¯ ┬─┬");
+                    e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
+                }
+                else if (e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                         CheckModuleState(e, "table", e.Channel.IsPrivate) )
+                {
+                    e.Channel.SendMessage(MarkovChainRepository.generateSentence());
+                }
+                /*else if (e.Message.Text.IndexOf("hillary", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                         e.Message.Text.IndexOf("clinton", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                         CheckModuleState(e, "politics", e.Channel.IsPrivate) && !e.User.IsBot)
+                {
+                    ChangeExpression("hillary", "Hillary R Clinton");
+                    System.Threading.Thread.Sleep(1000);
+                    e.Channel.SendMessage(HillaryMarkovChain.generateSentence());
+                    System.Threading.Thread.Sleep(5000);
+                    ChangeExpression("resting", "Beta");
+                }
+                else if (e.Message.Text.IndexOf("donald", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                         e.Message.Text.IndexOf("trump", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                         CheckModuleState(e, "politics", e.Channel.IsPrivate) && !e.User.IsBot)
+                {
+                    ChangeExpression("trump", "Donald J. Trump");
+                    System.Threading.Thread.Sleep(1000);
+                    e.Channel.SendMessage(TrumpMarkovChain.generateSentence());
+                    System.Threading.Thread.Sleep(5000);
+                    ChangeExpression("resting", "Beta");
+                    Console.WriteLine(Tweetinvi.Tweet.CanBePublished("@realDonaldTrump Loser."));
+                    /* if (Tweetinvi.Tweet.PublishTweet("@realDonaldTrump Loser.") == null)
+                    {
+                        Console.WriteLine("[HIGH PRIORITY ALERT] Reminding Donald Trump he is a loser failed.");
+                    }*//*
+                }*/
+                if (!e.User.IsBot && !(e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0) && !e.Message.Text.StartsWith("$"))
+                {
+                    MarkovChainRepository.feed(e.Message.Text);
+                    MarkovChainRepository.save("MarkovChainMemory.xml");
+                }
+            };
+
 
             _client.JoinedServer += (s, e) =>
             {
@@ -158,6 +198,56 @@ namespace Beta
                 ServerStateRepository = ServerStateRepository.LoadFromDisk();
                 GamertagRepository = GamertagRepository.LoadFromDisk();
                 UserStateRepository = UserStateRepository.LoadFromDisk();
+                TwitterXmlRepository = TwitterXMLRepository.LoadFromDisk();
+                MarkovChainRepository = new MultiDeepMarkovChain(3);
+                TrumpMarkovChain = new MultiDeepMarkovChain(3);
+                HillaryMarkovChain = new MultiDeepMarkovChain(3);
+
+                Auth.SetUserCredentials(Config.TwitterConsumerKey, Config.TwitterConsumerSecret, Config.TwitterAccessToken, Config.TwitterAccessSecret);
+
+                if (File.Exists("MarkovChainMemory.xml"))
+                {
+                    using (
+                        StreamReader file =
+                            new StreamReader(
+                                @"C:\Users\Dart Kietanmartaru\Desktop\Discord Bots\Beta\MarkovChainMemory.xml",
+                                Encoding.UTF8))
+                    {
+                        XmlDocument xd = MarkovChainRepository.getXmlDocument();
+                        xd.LoadXml(file.ReadToEnd());
+
+                        MarkovChainRepository.feed(xd);
+                    }
+                }
+                if (File.Exists("TrumpMarkovChainMemory.xml"))
+                {
+                    using (
+                        StreamReader file =
+                            new StreamReader(
+                                @"C:\Users\Dart Kietanmartaru\Desktop\Discord Bots\Beta\TrumpMarkovChainMemory.xml",
+                                Encoding.UTF8))
+                    {
+                        XmlDocument xd = TrumpMarkovChain.getXmlDocument();
+                        xd.LoadXml(file.ReadToEnd());
+
+                        TrumpMarkovChain.feed(xd);
+                    }
+                    
+                }
+                if (File.Exists("HillaryMarkovChainMemory.xml"))
+                {
+                    using (
+                        StreamReader file =
+                            new StreamReader(
+                                @"C:\Users\Dart Kietanmartaru\Desktop\Discord Bots\Beta\HillaryMarkovChainMemory.xml",
+                                Encoding.UTF8))
+                    {
+                        XmlDocument xd = HillaryMarkovChain.getXmlDocument();
+                        xd.LoadXml(file.ReadToEnd());
+
+                        HillaryMarkovChain.feed(xd);
+                    }
+                }
 
                 TableFlipResponses = new List<List<String>>
                 {
@@ -182,14 +272,15 @@ namespace Beta
                         "Hey I saw that shit, {0}. Knock that shit off.",
                         "Do you think I'm blind you little shit? stop flipping the tables!",
                         "You're causing a mess {0}! Knock it off!",
-						"All of these flavors and you decided to be salty, {0}.",
+                        "All of these flavors and you decided to be salty, {0}.",
                         "{0} why do you insist on being so disruptive!",
                         "Oh good. {0} is here. I can tell because the table was upsidedown again.",
                         "I'm getting really sick of this, {0}.",
                         "{0} what is your problem, dawg?",
-                        "Man, you don't see me coming to _YOUR_ place of business and flipping _YOUR_ desk, {0}."                        
+                        "Man, you don't see me coming to _YOUR_ place of business and flipping _YOUR_ desk, {0}."
                     },
-                    new List<String>{
+                    new List<String>
+                    {
                         "What the fuck, {0}? Why do you keep doing this?!",
                         "You're such a piece of shit, {0}. You know that, right?",
                         "Hey guys. I found the asshole. It's {0}.",
@@ -201,7 +292,8 @@ namespace Beta
                         "Ok I know I've told you this before {0], why can't you get it through your thick fucking skull. THE TABLE IS NOT FOR FLIPPING!",
                         "Man fuck you {0}"
                     },
-                    new List<String>{
+                    new List<String>
+                    {
                         "ARE YOU FUCKING SERIOUS RIGHT NOW {0}?!",
                         "GOD FUCKING DAMMIT {0}! KNOCK THAT SHIT OFF!",
                         "I CAN'T EVEN FUCKING BELIEVE THIS! {0}! STOP! FLIPPING! THE! TABLE!",
@@ -209,16 +301,18 @@ namespace Beta
                         "THE FUCK DID THIS TABLE EVERY DO TO YOU {0}?!",
                         "WHY DO YOU KEEP FLIPPING THE TABLE?! I JUST DON'T UNDERSTAND! WHAT IS YOUR PROBLEM {0}?! WHEN WILL THE SENSELESS TABLE VIOLENCE END?!"
                     },
-                    new List<String>{
+                    new List<String>
+                    {
                         "What the fuck did you just fucking do to that table, you little bitch? I’ll have you know I graduated top of my class in the Navy Seals, and I’ve been involved in numerous secret raids on Al-Quaeda, and I have over 300 confirmed kills. I am trained in gorilla warfare and I’m the top sniper in the entire US armed forces. You are nothing to me but just another meatbag target. I will wipe you the fuck out with precision the likes of which has never been seen before on this Earth, mark my fucking words. You think you can get away with saying that shit to me over the Internet? Think again, {0}. As we speak I am contacting my secret network of spies across the USA and your IP is being traced right now so you better prepare for the storm, maggot. The storm that wipes out the pathetic little thing you call your life. You’re fucking dead, kid. I can be anywhere, anytime, and I can kill you in over seven hundred ways, and that’s just with my bare hands. Not only am I extensively trained in unarmed combat, but I have access to the entire arsenal of the United States Marine Corps and I will use it to its full extent to wipe your miserable ass off the face of the continent, you little shit. If only you could have known what unholy retribution your little “clever” tableflip was about to bring down upon you, maybe you would have not flipped that fucking table. But you couldn’t, you didn’t, and now you’re paying the price, you goddamn idiot. I will shit fury all over you and you will drown in it. You’re fucking dead, kiddo."
                     },
                 };
 
-                //ChangeExpression("resting");
+                //ChangeExpression("resting", "Beta");
                 _client.Log.Info("Connected", $"Connected as {_client.CurrentUser.Name} (Id {_client.CurrentUser.Id})");
 
                 LoadModuleAuthorizations(_client);
-                ITwitterCredentials creds = Auth.SetUserCredentials(Beta.Config.TwitterConsumerKey, Beta.Config.TwitterConsumerSecret, Beta.Config.TwitterAccessToken, Beta.Config.TwitterAccessSecret);
+                ITwitterCredentials creds = Auth.SetUserCredentials(Beta.Config.TwitterConsumerKey,
+                    Beta.Config.TwitterConsumerSecret, Beta.Config.TwitterAccessToken, Beta.Config.TwitterAccessSecret);
                 stream.Credentials = creds;
 
                 stream.FollowedByUser += async (sender, arg) =>
@@ -226,11 +320,11 @@ namespace Beta
                     IUser user = arg.User;
                     foreach (Channel channel in _TwitterAuthorizedChannels)
                     {
-                        await channel.SendMessage("Hey Guys, got a new follower! " + user.ScreenName + "!");                        
+                        await channel.SendMessage("Hey Guys, got a new follower! " + user.ScreenName + "!");
                     }
                 };
 
-                stream.FollowedUser += async  (sender, arg) =>
+                stream.FollowedUser += async (sender, arg) =>
                 {
                     IUser user = arg.User;
                     foreach (Channel channel in _TwitterAuthorizedChannels)
@@ -238,20 +332,52 @@ namespace Beta
                         await channel.SendMessage("Hey Guys, I'm following a new account! " + user.ScreenName + "!");
                     }
                 };
-                stream.TweetCreatedByFriend += async (sender, arg) =>
+                stream.TweetCreatedByFriend += (sender, arg) =>
                 {
                     ITweet tweet = arg.Tweet;
-                    foreach (Channel channel in _TwitterAuthorizedChannels)
+                    if (tweet.CreatedBy.ScreenName == "realDonaldTrump" && tweet.IsRetweet == false)
                     {
-                        await channel.SendMessage(tweet.CreatedBy.ScreenName + ": " + tweet.Text);
-                        await channel.SendMessage(tweet.Url);
+                        TrumpMarkovChain.feed(RestSharp.Extensions.MonoHttp.HttpUtility.HtmlDecode(Regex.Replace(tweet.Text, @"(https?:\/\/(?:www\.|(?!www))[^\s\.]+\.[^\s]{2,}|www\.[^\s]+\.[^\s]{2,})", "")));
+                        TrumpMarkovChain.save("TrumpMarkovChainMemory.xml");
                     }
+                    if (tweet.CreatedBy.ScreenName == "HillaryClinton" && tweet.IsRetweet == false)
+                    {
+                        HillaryMarkovChain.feed(RestSharp.Extensions.MonoHttp.HttpUtility.HtmlDecode(Regex.Replace(tweet.Text, @"(https?:\/\/(?:www\.|(?!www))[^\s\.]+\.[^\s]{2,}|www\.[^\s]+\.[^\s]{2,})", "")));
+                        HillaryMarkovChain.save("HillaryMarkovChainMemory.xml");
+                    }
+
                 };
                 await stream.StartStreamAsync();
             });
+        }
 
-            
+        public static void IngestTwitterHistory()
+        {
+            //THIS IS REGEX FOR URL: / ((([A - Za - z]{ 3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/
+            foreach (Repository.Tweet tweet in TwitterXmlRepository.Tweets)
+            {
+                if (tweet.handle == "HillaryClinton")
+                {
+                    if (tweet.is_retweet == false)
+                    {
+                        HillaryMarkovChain.feed(tweet.text);
+                    }
+                    
+                }
+                else if (tweet.handle == "realDonaldTrump")
+                {
+                    if (tweet.is_retweet == false)
+                    {
+                        TrumpMarkovChain.feed(tweet.text);
+                    }
+                    
+                }
+               
 
+
+            }
+            HillaryMarkovChain.save("HillaryMarkovChainMemory.xml");
+            TrumpMarkovChain.save("TrumpMarkovChainMemory.xml");
         }
 
         public static bool CheckModuleState(CommandEventArgs e, string module, bool isDirectMessage)
@@ -281,6 +407,8 @@ namespace Beta
                     return (srvr.TwitterModuleEnabled || chnl.TwitterModuleEnabled);
                 case "note":
                     return (srvr.NoteModuleEnabled || chnl.NoteModuleEnabled);
+                case "politics":
+                    return (srvr.PoliticsEnabled || chnl.PoliticsEnabled);
                 default:
                     return false;
             }
@@ -313,6 +441,8 @@ namespace Beta
                     return (srvr.TwitterModuleEnabled || chnl.TwitterModuleEnabled);
                 case "note":
                     return (srvr.NoteModuleEnabled || chnl.NoteModuleEnabled);
+                case "politics":
+                    return (srvr.PoliticsEnabled || chnl.PoliticsEnabled);
                 default:
                     return false;
             }
@@ -323,11 +453,11 @@ namespace Beta
             if (points >= 81) return String.Format(TableFlipResponses[4].GetRandom(), Username);
             if (points >= 61) return String.Format(TableFlipResponses[3].GetRandom(), Username);
             if (points >= 41) return String.Format(TableFlipResponses[2].GetRandom(), Username);
-            if (points >= 21) return String.Format(TableFlipResponses[1].GetRandom(), Username); 
+            if (points >= 21) return String.Format(TableFlipResponses[1].GetRandom(), Username);
             return String.Format(TableFlipResponses[0].GetRandom(), Username);
         }
 
-        public void LogToFile(Server server, Channel channel, Discord.User usr,string msg)
+        public void LogToFile(Server server, Channel channel, Discord.User usr, string msg)
         {
             string ServerDir = Path.Combine(Environment.CurrentDirectory, server.Name);
             if (server.Name.Contains("Freeworld")) ServerDir = Path.Combine(Environment.CurrentDirectory, "Freeworlds");
@@ -337,7 +467,7 @@ namespace Beta
             {
                 Directory.CreateDirectory(ServerDir);
                 Directory.CreateDirectory(Path.Combine(ServerDir, "Channels"));
-            }            
+            }
             string mesg = string.Format(MsgLog, DateTime.Now, server.Name, channel.Name, usr.Name, usr.Id, msg);
             if (File.Exists(FileDir))
             {
@@ -353,7 +483,6 @@ namespace Beta
                 finally
                 {
                 }
-
             }
             else
             {
@@ -361,14 +490,13 @@ namespace Beta
                 try
                 {
                     sw = File.CreateText(FileDir);
-                    sw.WriteLine(mesg);           
+                    sw.WriteLine(mesg);
                 }
                 finally
                 {
                     sw.Close();
                 }
             }
-            
         }
 
         private static PermissionLevel GetPermissions(Discord.User u, Channel c)
@@ -395,19 +523,31 @@ namespace Beta
             return PermissionLevel.User;
         }
 
-        public async void ChangeExpression(string face)
+        public async void ChangeExpression(string face, string name)
         {
             face = face.ToLower();
             UpdateProfileRequest req = new UpdateProfileRequest();
-            req.Username = Username; //Give this your bots username if you leave it blank the name will  be None
-            switch(face)
+            req.Username = name; //Give this your bots username if you leave it blank the name will  be None
+            switch (face)
             {
+                case "trump":
+                    req.AvatarBase64 = Faces.TrumpFace;
+                    break;
+                case "hillary":
+                    req.AvatarBase64 = Faces.HillaryFace;
+                    break;
                 case "resting":
                     req.AvatarBase64 = Faces.RestingFace;
                     break;
             }
-            await _client.ClientAPI.Send(req);
-
+            try
+            {
+                await _client.ClientAPI.Send(req);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("[DISCORD API ERROR] "+e.Message);
+            };
         }
 
         public static void LoadModuleAuthorizations(DiscordClient client)
@@ -458,16 +598,27 @@ namespace Beta
         }
 
         private void WriteLog(LogMessageEventArgs e)
-        {            
+        {
             //Color
             ConsoleColor color;
             switch (e.Severity)
             {
-                case LogSeverity.Error: color = ConsoleColor.Red; break;
-                case LogSeverity.Warning: color = ConsoleColor.Yellow; break;
-                case LogSeverity.Info: color = ConsoleColor.White; break;
-                case LogSeverity.Verbose: color = ConsoleColor.Gray; break;
-                case LogSeverity.Debug: default: color = ConsoleColor.DarkGray; break;
+                case LogSeverity.Error:
+                    color = ConsoleColor.Red;
+                    break;
+                case LogSeverity.Warning:
+                    color = ConsoleColor.Yellow;
+                    break;
+                case LogSeverity.Info:
+                    color = ConsoleColor.White;
+                    break;
+                case LogSeverity.Verbose:
+                    color = ConsoleColor.Gray;
+                    break;
+                case LogSeverity.Debug:
+                default:
+                    color = ConsoleColor.DarkGray;
+                    break;
             }
 
             //Exception
@@ -504,7 +655,8 @@ namespace Beta
 
 
             //Build message
-            StringBuilder builder = new StringBuilder(text.Length + (sourceName?.Length ?? 0) + (exMessage?.Length ?? 0) + 5);
+            StringBuilder builder =
+                new StringBuilder(text.Length + (sourceName?.Length ?? 0) + (exMessage?.Length ?? 0) + 5);
             if (sourceName != null)
             {
                 builder.Append('[');
@@ -516,7 +668,7 @@ namespace Beta
             {
                 //Strip control chars
                 char c = text[i];
-                if (c == '\n' || !char.IsControl(c) || c != (char)8226) // (char)8226 beeps like \a, this catches that
+                if (c == '\n' || !char.IsControl(c) || c != (char) 8226) // (char)8226 beeps like \a, this catches that
                     builder.Append(c);
             }
             if (exMessage != null)
@@ -539,22 +691,14 @@ namespace Beta
 
     public class QuoteAddedEventArgs : EventArgs
     {
-        public string Quote
-        {
-            get;
-            private set;
-        }
+        public string Quote { get; private set; }
 
-        public string Author
-        {
-            get;
-            private set;
-        }
+        public string Author { get; private set; }
 
         public QuoteAddedEventArgs(string quote, string author)
         {
             Quote = quote;
-            Author = author;         
+            Author = author;
         }
     }
 
@@ -579,7 +723,6 @@ namespace Beta
         ///Adds all quotes in the file to the Quotes.XML
         public void Convert(QuoteRepository convRepo)
         {
-
             authorList = GetAuthors(quoteDir);
 
             for (int i = 0; i < authorList.Count; i++)

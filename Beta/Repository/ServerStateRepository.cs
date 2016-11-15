@@ -113,6 +113,8 @@ namespace Beta.Repository
 
         [XmlElement]
         public NoteRepository NoteRepository { get; set; }
+        [XmlAttribute]
+        public bool PoliticsEnabled { get; set; } = false;
 
         public bool ToggleFeatureBool(string module)
         {
@@ -145,6 +147,9 @@ namespace Beta.Repository
                 case "note":
                     this.NoteModuleEnabled = !this.NoteModuleEnabled;
                     return this.NoteModuleEnabled;
+                case "politics":
+                    PoliticsEnabled = !PoliticsEnabled;
+                    return PoliticsEnabled;
                 default:
                     return false;
             }
