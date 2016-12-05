@@ -107,6 +107,12 @@ namespace Beta
                 UserStateRepository.AddUser(e.User);
 
                 if (!e.Channel.IsPrivate) LogToFile(e.Server, e.Channel, e.User, e.Message.Text);
+                /*Operation: Annoy FG3D
+                
+                if (e.User.Id == 110582850272641024 && CheckModuleState(e, "table", e.Channel.IsPrivate))
+                {
+                    e.Channel.SendMessage(":eggplant:");
+                }*/
                 if (e.Message.IsAuthor)
                     _client.Log.Info("<<Message",
                         $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name},{e.User.Id}> {e.Message.Text}");
@@ -151,7 +157,7 @@ namespace Beta
                     ChangeExpression("resting", "Beta");
                 }
                 else if (e.Message.Text.IndexOf("donald", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                         e.Message.Text.IndexOf("trump", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                         e.Message.Text.IndexOf("trump", StringComparison.OrdinalIgnoreCase) >= 0 && 
                          CheckModuleState(e, "politics", e.Channel.IsPrivate) && !e.User.IsBot)
                 {
                     ChangeExpression("trump", "Donald J. Trump");
@@ -192,7 +198,7 @@ namespace Beta
 
             _client.ExecuteAndWait(async () =>
             {
-                await _client.Connect(Config.Token);
+                await _client.Connect(Config.Token, TokenType.Bot);
                 QuoteRepository = QuoteRepository.LoadFromDisk();
                 ChannelStateRepository = ChannelStateRepository.LoadFromDisk();
                 ServerStateRepository = ServerStateRepository.LoadFromDisk();
