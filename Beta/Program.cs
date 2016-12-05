@@ -195,6 +195,7 @@ namespace Beta
             _client.AddModule<ComicModule>("Comics", ModuleFilter.None);
             _client.AddModule<GamertagModule>("Gamertag", ModuleFilter.None);
             _client.AddModule<NoteModule>("Note", ModuleFilter.None);
+            _client.AddModule<ChatBattleModule>("Chat Battle", ModuleFilter.None);
 
             _client.ExecuteAndWait(async () =>
             {
