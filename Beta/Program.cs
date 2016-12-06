@@ -142,7 +142,7 @@ namespace Beta
                     e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
                 }
                 else if (e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0 &&
-                         CheckModuleState(e, "table", e.Channel.IsPrivate) )
+                         CheckModuleState(e, "table", e.Channel.IsPrivate) && !e.Message.Text.StartsWith("$") && !e.User.IsBot )
                 {
                     e.Channel.SendMessage(MarkovChainRepository.generateSentence());
                 }

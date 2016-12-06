@@ -13,6 +13,7 @@ namespace Beta.Modules
     {
         private DiscordClient _client;
         private ModuleManager _manager;
+        Random r = new Random();
         public override string Prefix { get; } = "$";
         public List<string> WeaponPrefixList = new List<string>()
         {
@@ -279,58 +280,113 @@ namespace Beta.Modules
                     await e.User.SendMessage(String.Format("Level: {0} HP: {1}/{2} Gold: {3} XP: {4} Kills: {5} Deaths: {6} ", usr.RPGLevel, usr.RPGHitpoints, usr.RPGMaxHP, usr.RPGGold, usr.RPGXP, usr.RPGWins, usr.RPGLosses) );
                 });
 
+                cgb.CreateCommand("res")
+                .Description("Spend a percentage of your gold to return you to the living with max health! Beta will probably take some of your gold.")
+                .Do(async e =>
+                {
+                    UserState target = Beta.UserStateRepository.GetUserState(e.User.Id);
+                    int cost = Convert.ToInt32(target.RPGGold * (.1 + (.01 * target.RPGLevel)));
+                    Beta.UserStateRepository.ResUser(cost, target.UserId);
+                    await e.User.SendMessage("Heroes never die!");                                                            
+                    await e.User.SendMessage(String.Format("Oh. Also I took {0} gold. You know, for my trouble ;D", cost));                    
+                });
+
                 cgb.CreateCommand("attack")
                 .Description("Attack your target")
                 .Parameter("target", ParameterType.Required)
                 .Do(async e =>
                 {
-                    Random r = new Random();
+                    
                     UserState attacker = Beta.UserStateRepository.GetUserState(e.User.Id);
                     UserState target = null;
-                    if (e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target")) != null)
-                    {
-                        User usr = e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target"));
-                        Beta.UserStateRepository.AddUser(usr);
-                        target = Beta.UserStateRepository.GetUserState(usr.Id);
-                        if (target.RPGHitpoints == -1) target.RPGHitpoints = target.RPGMaxHP;
-                    }
-                    int damage = (int) ((attacker.RPGLevel*.25)*r.Next(4, 50));
-                    await
-                        e.Channel.SendMessage(
-                            String.Format("{0} attacked {1} with the {2} {3} of {4} for {5} points of damage!",
-                            e.User.Name, e.GetArg("target"), WeaponPrefixList.GetRandom(), WeaponList.GetRandom(),
-                            WeaponSuffixList.GetRandom(), damage ));
-                    if (target != null)
-                    {
-                        if (target.RPGHitpoints == 0)
+                    if (Beta.CheckModuleState(e, "table", e.Channel.IsPrivate) && attacker.Alive)
+                    {                                                    
+                        if (e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target")) != null)
                         {
-                            await
-                                e.Channel.SendMessage(
-                                    "Oh. Sorry, it looks like that target is currently dead. They'll have to res themselves before you can attack them for gold and xp!");
+                            User usr = e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target"));
+                            Beta.UserStateRepository.AddUser(usr);
+                            target = Beta.UserStateRepository.GetUserState(usr.Id);
+                            if (target.RPGHitpoints == -1) target.RPGHitpoints = target.RPGMaxHP;
+                        }
+                        int damage = (int)((attacker.RPGLevel * .25) * r.Next(4, 50));
+                        await
+                            e.Channel.SendMessage(
+                                String.Format("{0} attacked {1} with the {2} {3} of {4} for {5} points of damage!",
+                                e.User.Name, e.GetArg("target"), WeaponPrefixList.GetRandom(), WeaponList.GetRandom(),
+                                WeaponSuffixList.GetRandom(), damage));
+                        if (target != null)
+                        {
+                            if (target.RPGHitpoints == 0)
+                            {
+                                await
+                                    e.Channel.SendMessage(
+                                        "Oh. Sorry, it looks like that target is currently dead. They'll have to res themselves before you can attack them for gold and xp!");
+                            }
+                            else
+                            {
+                                target.RPGHitpoints -= damage;
+                                if (target.RPGHitpoints < 1 && target.UserId != attacker.UserId)
+                                {                                    
+                                    target.RPGHitpoints = 0;
+                                    target.Alive = false;
+                                    int xp = 1;
+                                    int gold = (target.RPGLevel)*r.Next(1, 25);
+                                    if (target.RPGLevel > attacker.RPGLevel)
+                                        xp = 1 + target.RPGLevel - attacker.RPGLevel;
+                                    else if (target.RPGLevel - attacker.RPGLevel < -3)
+                                        xp = 0;
+                                    await
+                                        e.Channel.SendMessage(
+                                            String.Format(
+                                                "That hit killed {0}! {1} found {2} gold on their corpse! Gained {3} XP!",
+                                                target.UserName, e.User.Name, gold, xp));
+                                    attacker.RPGGold += gold;
+                                    attacker.RPGXP += xp;
+                                    attacker.RPGWins++;
+                                    target.RPGLosses++;
+                                    attacker.CheckLevelUp(e);
+                                    Beta.UserStateRepository.Save();
+                                }
+                                else if (target.UserId == attacker.UserId)
+                                {
+                                    await e.Channel.SendMessage(
+                                        String.Format("Oh. Looks like {0} managed to kill themselves. You lost {1} XP.", e.User.Name, target.RPGLevel * 3));
+                                    target.RPGHitpoints = 0;
+                                    target.Alive = false;
+                                    target.RPGLosses++;
+
+                                    Beta.UserStateRepository.Save();
+                                    if (r.Next(1, 5) == 3)
+                                    {
+                                        int lostGold = r.Next(1,5) * target.RPGLevel;
+                                        await
+                                            e.Channel.SendMessage(
+                                                String.Format(
+                                                    "Also, a bandit seems to have picked your corpse's pocket. Lose {0} gold.", lostGold));
+                                        if (lostGold > target.RPGGold)
+                                        {
+                                            UserState.BanditGold += target.RPGGold;
+                                            target.RPGGold = 0;
+                                        }
+                                        else
+                                        {
+                                            UserState.BanditGold += lostGold;
+                                            target.RPGGold -= lostGold;
+                                        }
+                                    }
+                                }                                
+                            }
                         }
                         else
                         {
-                            target.RPGHitpoints -= damage;
-                            if (target.RPGHitpoints < 1)
-                            {
-                                target.RPGHitpoints = 0;
-                                int xp = 1;
-                                int gold = (target.RPGLevel) * r.Next(1, 25);
-                                if (target.RPGLevel > attacker.RPGLevel)
-                                    xp = 1 + target.RPGLevel - attacker.RPGLevel;
-                                else if (target.RPGLevel - attacker.RPGLevel < -3)
-                                    xp = 0;
-                                await
-                                    e.Channel.SendMessage(
-                                        String.Format("That hit killed {0}! {1} found {2} gold on their corpse! Gained {3} XP!",
-                                            target.UserName, e.User.Name, gold, xp));
-                                attacker.RPGGold += gold;
-                                attacker.RPGXP += xp;
-                                attacker.CheckLevelUp(e);
-                            }
+                            
                         }
                     }
-                    
+                    else if (!attacker.Alive)
+                    {
+                       await e.User.SendMessage("YOU'RE DEAD DING DONG!");
+                    }
+
                 });
                 
             });
