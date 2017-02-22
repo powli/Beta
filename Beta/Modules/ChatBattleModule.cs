@@ -277,7 +277,7 @@ namespace Beta.Modules
                     Beta.UserStateRepository.AddUser(e.User);
                     UserState usr = Beta.UserStateRepository.GetUserState(e.User.Id);
                     if (usr.RPGHitpoints == -1) usr.RPGHitpoints = usr.RPGMaxHP;
-                    await e.User.SendMessage(String.Format("Level: {0} HP: {1}/{2} Gold: {3} XP: {4} Kills: {5} Deaths: {6} ", usr.RPGLevel, usr.RPGHitpoints, usr.RPGMaxHP, usr.RPGGold, usr.RPGXP, usr.RPGWins, usr.RPGLosses) );
+                    await e.User.SendMessage(String.Format("Level: {0} HP: {1}/{2} Stamina: {3}/{4}Gold: {5} XP: {6} Kills: {7} Deaths: {8} ", usr.RPGLevel, usr.RPGHitpoints, usr.RPGMaxHP, usr.RPGStamina, usr.RPGMaxStamina, usr.RPGGold, usr.RPGXP, usr.RPGWins, usr.RPGLosses) );
                 });
 
                 cgb.CreateCommand("res")
@@ -293,7 +293,7 @@ namespace Beta.Modules
 
                 cgb.CreateCommand("attack")
                 .Description("Attack your target")
-                .Parameter("target", ParameterType.Required)
+                .Parameter("target", ParameterType.Unparsed)
                 .Do(async e =>
                 {
                     
@@ -314,8 +314,9 @@ namespace Beta.Modules
                                 String.Format("{0} attacked {1} with the {2} {3} of {4} for {5} points of damage!",
                                 e.User.Name, e.GetArg("target"), WeaponPrefixList.GetRandom(), WeaponList.GetRandom(),
                                 WeaponSuffixList.GetRandom(), damage));
-                        if (target != null)
+                        if (target != null && attacker.RPGStamina > 0)
                         {
+                            attacker.RPGStamina--;
                             if (target.RPGHitpoints == 0)
                             {
                                 await
@@ -373,6 +374,11 @@ namespace Beta.Modules
                                             UserState.BanditGold += lostGold;
                                             target.RPGGold -= lostGold;
                                         }
+                                        if (3*target.RPGLevel > target.RPGXP)
+                                        {
+                                            target.RPGXP = 0;
+                                        }
+                                        else target.RPGXP -= target.RPGLevel*3;
                                     }
                                 }                                
                             }

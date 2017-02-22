@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Text;
 using Discord;
@@ -8,8 +7,9 @@ using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using System.IO;
-using System.Linq.Expressions;
+using System.Timers;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 using Beta.Modules;
 using Beta.JSONConfig;
@@ -19,7 +19,6 @@ using Newtonsoft.Json;
 using Discord.API.Client.Rest;
 using TextMarkovChains;
 using Tweetinvi;
-using Tweetinvi.Core.Helpers;
 using Tweetinvi.Models;
 using Tweetinvi.Streaming;
 
@@ -107,12 +106,7 @@ namespace Beta
                 UserStateRepository.AddUser(e.User);
 
                 if (!e.Channel.IsPrivate) LogToFile(e.Server, e.Channel, e.User, e.Message.Text);
-                /*Operation: Annoy FG3D
-                
-                if (e.User.Id == 110582850272641024 && CheckModuleState(e, "table", e.Channel.IsPrivate))
-                {
-                    e.Channel.SendMessage(":eggplant:");
-                }*/
+
                 if (e.Message.IsAuthor)
                     _client.Log.Info("<<Message",
                         $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name},{e.User.Id}> {e.Message.Text}");
@@ -209,6 +203,10 @@ namespace Beta
                 MarkovChainRepository = new MultiDeepMarkovChain(3);
                 TrumpMarkovChain = new MultiDeepMarkovChain(3);
                 HillaryMarkovChain = new MultiDeepMarkovChain(3);
+                System.Timers.Timer StaminaTimer = new System.Timers.Timer(60 * 1000.00);
+                StaminaTimer.AutoReset = true;
+                StaminaTimer.Elapsed += (sender, e) => Beta.UserStateRepository.RefreshStamina();
+                StaminaTimer.Start();
 
                 Auth.SetUserCredentials(Config.TwitterConsumerKey, Config.TwitterConsumerSecret, Config.TwitterAccessToken, Config.TwitterAccessSecret);
 
