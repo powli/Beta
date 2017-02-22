@@ -117,9 +117,24 @@ namespace Beta.Modules
                 {
                     if (Beta.CheckModuleState(e, "quote", e.Channel.IsPrivate))
                     {
+                        msg = "";
                         await e.User.SendMessage("Oh yeah sure one sec... I got quotes for all these guys: ");
                         Beta.QuoteRepository.Authors = Beta.QuoteRepository.Authors.OrderBy(item => item.Name).ToList();
-                        await e.User.SendMessage(string.Join(Environment.NewLine, Beta.QuoteRepository.Authors));
+                        foreach (Author author in Beta.QuoteRepository.Authors)
+                        {
+                            //Before adding the author name to the message, make sure we're not exceeding 2000 characters
+                            if ((author.Name.Length + msg.Length) > 2000)
+                            {//If we are, send the message, blank it out, and start building a new one.
+                                await e.User.SendMessage(msg);
+                                msg = "";
+                                msg += author.Name+"\n";
+                            } 
+                            else
+                            {//Otherwise, just add the author name to the list and move on.
+                                msg += author.Name+"\n";
+                            }
+                        }
+                        if (msg != "") await e.User.SendMessage(msg);
                     }
                 });
 
