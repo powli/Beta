@@ -4,15 +4,18 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using Discord;
+using Beta.Modules;
 using Discord.Commands;
+using Discord.Modules;
+using Tweetinvi;
+using User = Discord.User;
 
 namespace Beta.Repository
 {
     [Serializable]
-    public class UserStateRepository
+    public class UserStateRepository 
     {
-        private const string _Filename = "UserStates.xml";
+        public const string _Filename = "UserStates.xml";
 
         [XmlArrayItem("UserState")]
         public List<UserState> UserStates
@@ -22,7 +25,7 @@ namespace Beta.Repository
         }
 
         public UserStateRepository()
-        {
+        {            
             UserStates = new List<UserState>();
         }
 
@@ -109,14 +112,18 @@ namespace Beta.Repository
             return dictionary;
         }
 
-        public void RefreshStamina()
+        public void UpdateUserStates(Beta beta)
         {
             foreach (UserState usr in UserStates)
             {
-                if (usr.RPGStamina < usr.RPGMaxStamina)
+                if (usr.RPGStamina < usr.RPGMaxStamina) usr.RPGStamina++;
+                if (usr.RPGHitpoints < usr.RPGMaxHP) usr.RPGHitpoints++;
+                if (usr.RPGHitpoints <= 0)
                 {
-                    usr.RPGStamina++;
+                    usr.Alive = false;
+                    usr.RPGHitpoints = 0;
                 }
+                usr.CheckLevelUp(beta.GetUser(usr.UserId));
             }
             Save();
         }
@@ -124,7 +131,9 @@ namespace Beta.Repository
 
     public class UserState
     {
-        
+        [XmlIgnore]
+        private Random r = new Random();
+
         [XmlAttribute]
         public ulong UserId { get; set; }
 
@@ -165,6 +174,12 @@ namespace Beta.Repository
         public int RPGMaxStamina { get; set; } = 3;
 
         [XmlAttribute]
+        public int RPGHealingPotions { get; set; } = 0;
+
+        [XmlAttribute]
+        public int RPGStaminaPotions { get; set; } = 0;
+
+        [XmlAttribute]
         public bool Alive { get; set; } = true;
 
         [XmlAttribute]
@@ -172,21 +187,55 @@ namespace Beta.Repository
 
         public void CheckLevelUp(CommandEventArgs e)
         {
-            if (this.RPGXP >= (this.RPGLevel*10))
+            while (RPGXP >= (RPGLevel*RPGLevel))
             {
-                Random r = new Random();
-                int HP = r.Next(1, 25)*this.RPGLevel;
-                int Stamina = r.Next(1, 3);
-                this.RPGXP = this.RPGXP - (this.RPGLevel*10);
-                this.RPGLevel++;
-                this.RPGMaxHP += HP;
-                this.RPGHitpoints += HP;
-                this.RPGStamina += Stamina;
-                this.RPGMaxStamina += Stamina;
-                e.Channel.SendMessage(String.Format("LEVEL UP! {0}'s level has gone up to {1}, and they have gained {2} HP and {3} Stamina!", e.User.Name, this.RPGLevel, HP, Stamina));
-
-
+                List<string> increasedStats = LevelUp();
+                e.Channel.SendMessage(String.Format("LEVEL UP! {0}'s level has gone up to {1}, and they have gained {2} HP and {3} Stamina!", UserName, RPGLevel, increasedStats[0], increasedStats[1]));
             }
+        }
+
+        public void CheckLevelUp(User usr)
+        {
+            while (RPGXP >= (RPGLevel * RPGLevel))
+            {                
+                List<string> increasedStats = LevelUp();
+                usr.SendMessage(String.Format("LEVEL UP! {0}'s level has gone up to {1}, and they have gained {2} HP and {3} Stamina!", UserName, RPGLevel, increasedStats[0], increasedStats[1]));
+            }
+        }
+
+        private List<string> LevelUp()
+        {
+            int HP = r.Next(1, 25) * RPGLevel;
+            int Stamina = r.Next(1, 3);
+            RPGXP = RPGXP - (RPGLevel * RPGLevel);
+            RPGLevel++;
+            RPGMaxHP += HP;
+            RPGHitpoints += HP;
+            RPGStamina += Stamina;
+            RPGMaxStamina += Stamina;
+            return new List<string>()
+            {
+                HP.ToString(),
+                Stamina.ToString()
+            };
+        }
+
+        public XPandGold ScoreKill(UserState enemy, CommandEventArgs e)
+        {
+            int xp = 1;
+            int gold = (enemy.RPGLevel)*r.Next(1, 25);
+            if (enemy.RPGLevel > RPGLevel) xp = 1 + enemy.RPGLevel - RPGLevel;
+            else if (enemy.RPGLevel - RPGLevel < -3) xp = 0;
+            RPGWins++;
+            return new XPandGold(gold,xp);
+        }
+
+        public void Die()
+        {
+            RPGLosses++;
+            Alive = false;
+            RPGHitpoints = 0;
+            if (UserName == "Beta") Res(0);
         }
 
         public void Res(int cost)
@@ -194,8 +243,37 @@ namespace Beta.Repository
             Alive = true;
             RPGHitpoints = RPGMaxHP;
             RPGGold -= cost;
-
         }
 
+        public int DrinkStaminaPotion()
+        {
+            int stam = r.Next(2, 4);
+            RPGStamina += stam;
+            if (RPGStamina > RPGMaxStamina) RPGStamina = RPGMaxStamina;
+            RPGStamina--;
+            return stam;
+        }
+
+        public int DrinkHealingPotion()
+        {
+            int healing = r.Next(12, 25);
+            RPGHitpoints += healing;
+            if (RPGHitpoints > RPGMaxHP) RPGHitpoints = RPGMaxHP;
+            RPGHealingPotions--;
+            return healing;
+        }
+
+    }
+
+    public struct XPandGold
+    {
+        public int Gold;
+        public int XP;
+
+        public XPandGold(int gold, int xp)
+        {
+            Gold = gold;
+            XP = xp;
+        }
     }
 }

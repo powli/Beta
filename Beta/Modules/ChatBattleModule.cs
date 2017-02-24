@@ -9,12 +9,33 @@ using Beta.Repository;
 
 namespace Beta.Modules
 {
+    public class Result
+    {
+        public bool TargetDead;
+        public int Damage;
+        public XPandGold Spoils;
+
+        public Result(bool dead, int dmg)
+        {
+            TargetDead = dead;
+            Damage = dmg;
+        }
+
+        public Result(bool dead, int dmg, XPandGold spoils)
+        {
+            TargetDead = dead;
+            Damage = dmg;
+            Spoils = spoils;
+        }
+    }
     class ChatBattleModule : DiscordModule
     {
         private DiscordClient _client;
         private ModuleManager _manager;
         Random r = new Random();
         public override string Prefix { get; } = "$";
+
+        #region Weapon Building Lists
         public List<string> WeaponPrefixList = new List<string>()
         {
             "Ancient",
@@ -260,6 +281,59 @@ namespace Beta.Modules
             "Frigg",
             "Freyja"
         };
+        #endregion
+
+        #region String Formats
+        string KalisAirlock = "Kalis pushes {0} out of the airlock, then returns to his command chair like nothing happened";
+        string DartAirlock = "Dart pushes {0} out of the airlock, blowing them a kiss \"Goodbye\".";
+        string SizerAirlock = "Sizer pushes {0} out of the airlock, lights a cigar, and returns to his throne";
+        string FFAirlock ="FriendlyFire materializes an airlock around {0} then pushes them out of it, grunting something about having work to do.";
+        string DFAirlock = "DarkForce pushes {0} out of the airlock, feels great about himself for being such a go-getter for about five minutes, then has a panic attack for the next five hours over having just committed murder. His Google searches over this period of time include \'Can the police discover bodies in space?\', \'Will bodies, evidence, organic matter burn up upon atmospheric reentry?\', and \'Does it count as murder if your victim was really, really, super aggravating?\'";
+        string DefaultAirlock = "{0} pushes {1} out of the airlock, cackaling manaically. So long, jerkwad!";
+        string AdminFail = "{0} attempted to push {1} out of the airlock, however {1} sidesteps and pushes them out, instead. What a chump.";
+        string AirlockFail = "{0} tried to push {1} out of the airlock, however {0} tripped and fell out instead... Better luck next time!";
+        string RPGStats = "Level: {0} HP: {1}/{2} Stamina: {3}/{4}Gold: {5} XP: {6} Kills: {7} Deaths: {8} ";
+        string RPGInv = "Healing Potions: {0} Stamina Potions: {1}";
+#endregion
+
+        public List<string> Admins = new List<string>()
+        {
+            "sizer",
+            "friendlyfire",
+            "dart",
+            "darkforce",
+            "kalis"
+        };
+
+        public User GetUser(ulong id)
+        {
+            foreach (Server srvr in _client.Servers)
+            {
+                foreach (User usr in srvr.Users)
+                {
+                    if (usr.Id == id) return usr;
+                }
+            }
+            return null;
+        }
+        
+
+        public Result HandleChatCombat(UserState attacker, UserState target, CommandEventArgs e)
+        {
+            int dmg = (int)((attacker.RPGLevel * .25) * r.Next(4, 50));
+            if (attacker.UserName == "Beta") dmg =(int) ((target.RPGLevel * .25) * r.Next(8, 100));
+            target.RPGHitpoints -= dmg;
+            if (target.RPGHitpoints <= 0)
+            {
+                XPandGold spoils = attacker.ScoreKill(target, e);
+                target.Die();
+                return new Result(true, dmg, spoils);
+            }
+            else
+            {
+                return new Result(false, dmg);
+            }
+        }        
 
         public override void Install(ModuleManager manager)
         {
@@ -271,13 +345,13 @@ namespace Beta.Modules
                 cgb.MinPermissions((int)PermissionLevel.User);
 
                 cgb.CreateCommand("stats")
-                .Description("Check your stats for Chat Battle, sent via on PM")
+                .Description("Check your stats for Chat Battle, sent via PM")
                 .Do(async e =>
                 {
                     Beta.UserStateRepository.AddUser(e.User);
                     UserState usr = Beta.UserStateRepository.GetUserState(e.User.Id);
                     if (usr.RPGHitpoints == -1) usr.RPGHitpoints = usr.RPGMaxHP;
-                    await e.User.SendMessage(String.Format("Level: {0} HP: {1}/{2} Stamina: {3}/{4}Gold: {5} XP: {6} Kills: {7} Deaths: {8} ", usr.RPGLevel, usr.RPGHitpoints, usr.RPGMaxHP, usr.RPGStamina, usr.RPGMaxStamina, usr.RPGGold, usr.RPGXP, usr.RPGWins, usr.RPGLosses) );
+                    await e.User.SendMessage(String.Format(RPGStats, usr.RPGLevel, usr.RPGHitpoints, usr.RPGMaxHP, usr.RPGStamina, usr.RPGMaxStamina, usr.RPGGold, usr.RPGXP, usr.RPGWins, usr.RPGLosses) );
                 });
 
                 cgb.CreateCommand("res")
@@ -286,9 +360,57 @@ namespace Beta.Modules
                 {
                     UserState target = Beta.UserStateRepository.GetUserState(e.User.Id);
                     int cost = Convert.ToInt32(target.RPGGold * (.1 + (.01 * target.RPGLevel)));
-                    Beta.UserStateRepository.ResUser(cost, target.UserId);
-                    await e.User.SendMessage("Heroes never die!");                                                            
-                    await e.User.SendMessage(String.Format("Oh. Also I took {0} gold. You know, for my trouble ;D", cost));                    
+
+                    if (!target.Alive)
+                    {
+                        Beta.UserStateRepository.ResUser(cost, target.UserId);
+                        await e.User.SendMessage("Heroes never die!");
+                        await e.User.SendMessage(String.Format("Oh. Also I took {0} gold. You know, for my trouble ;D", cost));
+                    }
+                    else
+                    {
+                        await e.User.SendMessage("Sorry, bub. Looks like you're still kicking, try dying first.");
+                    }
+
+
+                });
+
+
+                cgb.CreateCommand("push")
+                .Description("Pushes the target out of an airlock. Can only be used by Admins")
+                .Parameter("target", ParameterType.Unparsed)
+                .Do(async e =>
+                {
+                    string msg = "";
+                    string target = e.GetArg("target").Trim();
+                    bool isAdmin = Admins.Contains(target.ToLower());                  
+                    Console.WriteLine("isAdmin: "+isAdmin+" Target: "+target);
+                    switch (e.User.Name)
+                    {
+                        case "Dart":
+                            msg = String.Format(DartAirlock, target);
+                            break;
+                        case "Kalis":
+                            msg = String.Format(KalisAirlock, target);
+                            break;
+                        case "Sizer":
+                            msg = String.Format(SizerAirlock, target);
+                            break;
+                        case "FriendlyFire":
+                            msg = String.Format(FFAirlock, target);
+                            break;
+                        case "DarkForce":
+                            msg = String.Format(DFAirlock, target);
+                            break;
+                        default:
+                            if (e.Channel.Id == 93924120042934272)
+                            {
+                                msg = String.Format(AirlockFail, e.User.Name, target);
+                                if (isAdmin) msg = String.Format(AdminFail, e.User.Name, target);
+                            }                            
+                            break;
+                    }
+                    if (msg != "") await e.Channel.SendMessage(msg);
                 });
 
                 cgb.CreateCommand("attack")
@@ -296,27 +418,32 @@ namespace Beta.Modules
                 .Parameter("target", ParameterType.Unparsed)
                 .Do(async e =>
                 {
-                    
+                    Result combatResult;
+                    Result betaResult = null;
                     UserState attacker = Beta.UserStateRepository.GetUserState(e.User.Id);
                     UserState target = null;
+                    if (attacker == null)
+                    {
+                        Beta.UserStateRepository.AddUser(e.User);
+                        attacker = Beta.UserStateRepository.GetUserState(e.User.Id);
+                    }
+                    int damage = (int)((attacker.RPGLevel * .25) * r.Next(4, 50));
                     if (Beta.CheckModuleState(e, "table", e.Channel.IsPrivate) && attacker.Alive)
                     {                                                    
                         if (e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target")) != null)
                         {
                             User usr = e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target"));
-                            Beta.UserStateRepository.AddUser(usr);
-                            target = Beta.UserStateRepository.GetUserState(usr.Id);
-                            if (target.RPGHitpoints == -1) target.RPGHitpoints = target.RPGMaxHP;
-                        }
-                        int damage = (int)((attacker.RPGLevel * .25) * r.Next(4, 50));
-                        await
-                            e.Channel.SendMessage(
-                                String.Format("{0} attacked {1} with the {2} {3} of {4} for {5} points of damage!",
-                                e.User.Name, e.GetArg("target"), WeaponPrefixList.GetRandom(), WeaponList.GetRandom(),
-                                WeaponSuffixList.GetRandom(), damage));
+                            if (Beta.UserStateRepository.VerifyUsersExists(usr.Id))
+                            {
+                                target = Beta.UserStateRepository.GetUserState(usr.Id);
+                                if (target.RPGHitpoints == -1) target.RPGHitpoints = target.RPGMaxHP;
+                            }                            
+                        }                        
                         if (target != null && attacker.RPGStamina > 0)
-                        {
+                        {                            
                             attacker.RPGStamina--;
+                            if (attacker.RPGStamina == 0) e.User.SendMessage("You feel exhausted...");
+                            if (target.RPGHitpoints == 0 && target.UserName == "Beta") target.Res(1);
                             if (target.RPGHitpoints == 0)
                             {
                                 await
@@ -325,38 +452,99 @@ namespace Beta.Modules
                             }
                             else
                             {
-                                target.RPGHitpoints -= damage;
-                                if (target.RPGHitpoints < 1 && target.UserId != attacker.UserId)
-                                {                                    
-                                    target.RPGHitpoints = 0;
-                                    target.Alive = false;
-                                    int xp = 1;
-                                    int gold = (target.RPGLevel)*r.Next(1, 25);
-                                    if (target.RPGLevel > attacker.RPGLevel)
-                                        xp = 1 + target.RPGLevel - attacker.RPGLevel;
-                                    else if (target.RPGLevel - attacker.RPGLevel < -3)
-                                        xp = 0;
+                                combatResult = HandleChatCombat(attacker, target, e);
+                                await
+                                    e.Channel.SendMessage(
+                                        String.Format("{0} attacked {1} with the {2} {3} of {4} for {5} points of damage! You drew blood!",
+                                        e.User.Name, e.GetArg("target"), WeaponPrefixList.GetRandom(), WeaponList.GetRandom(),
+                                        WeaponSuffixList.GetRandom(), combatResult.Damage));
+                                
+                                if (target.UserName == "Beta")
+                                {
+                                    betaResult = HandleChatCombat(target, attacker, e);
                                     await
                                         e.Channel.SendMessage(
                                             String.Format(
+                                                "I struck back with my trusty {0} {1} of {2} for {3} points of damage!",
+                                                WeaponPrefixList.GetRandom(), WeaponList.GetRandom(),
+                                                WeaponSuffixList.GetRandom(),betaResult.Damage));
+                                    //Both targets have died
+                                    if (combatResult.TargetDead && betaResult.TargetDead)
+                                    {
+                                        await
+                                            e.Channel.SendMessage(
+                                                String.Format(
+                                                    "I levied a counter attack, felling {0}. However I was fatal wounded, and died shortly thereafter. I shall return...",attacker.UserName));
+                                        await
+                                            e.Channel.SendMessage(String.Format("I gained {0} XP! {1} gained {2} XP!",
+                                                betaResult.Spoils.XP, attacker.UserName, combatResult.Spoils.XP));
+                                        attacker.RPGXP += combatResult.Spoils.XP;
+                                        attacker.CheckLevelUp(e);
+                                        target.RPGXP += betaResult.Spoils.XP;
+                                        target.CheckLevelUp(e);
+                                    }
+                                    //Original attacker dies and Beta survives
+                                    else if (!combatResult.TargetDead && betaResult.TargetDead)
+                                    {
+                                        await
+                                            e.Channel.SendMessage(
+                                                String.Format(
+                                                    "I sure taught {0} a lesson! I earned {1} XP and was able to loot {2} gold from the corpse!",attacker.UserName,betaResult.Spoils.XP,betaResult.Spoils.Gold));
+                                        target.RPGXP += betaResult.Spoils.XP;
+                                        target.RPGGold += betaResult.Spoils.Gold;
+                                        target.CheckLevelUp(e);
+                                    }
+                                    //Beta dies and original attacker survives
+                                    else if (combatResult.TargetDead && !betaResult.TargetDead)
+                                    {
+                                        int num = r.Next(1, 3);
+                                        await
+                                            e.Channel.SendMessage(
+                                                String.Format(
+                                                    "{0} has taken me down! They gained {1} XP and found {2} gold on my corpse! Don't get too cocky, I'll be back.",
+                                                    attacker.UserName, combatResult.Spoils.XP, combatResult.Spoils.Gold));
+                                        attacker.RPGXP += combatResult.Spoils.XP;
+                                        attacker.RPGGold += combatResult.Spoils.Gold;
+                                        attacker.CheckLevelUp(e);
+                                        if (r.Next(1, 1000) == 7)
+                                        {
+                                            
+                                            await e.Channel.SendMessage(
+                                                String.Format(
+                                                    "Upon further examination of my body you also discover {0} healing potions!",
+                                                    num));
+                                            attacker.RPGHealingPotions += num;
+                                            num = r.Next(1, 3);
+                                        }
+                                        else if (r.Next(1, 1000) == 3)
+                                        {
+                                           await e.Channel.SendMessage(
+                                                String.Format(
+                                                    "Upon further examination of my body you also disover {0} stamina potions!", num));
+                                            attacker.RPGStaminaPotions += num;
+                                        }
+
+                                    }
+                                }                                
+                                else if (target.UserId != attacker.UserId)
+                                {
+                                    if (combatResult.TargetDead)
+                                    {
+                                        await
+                                        e.Channel.SendMessage(
+                                            String.Format(
                                                 "That hit killed {0}! {1} found {2} gold on their corpse! Gained {3} XP!",
-                                                target.UserName, e.User.Name, gold, xp));
-                                    attacker.RPGGold += gold;
-                                    attacker.RPGXP += xp;
-                                    attacker.RPGWins++;
-                                    target.RPGLosses++;
-                                    attacker.CheckLevelUp(e);
-                                    Beta.UserStateRepository.Save();
-                                }
+                                                target.UserName, e.User.Name, combatResult.Spoils.Gold, combatResult.Spoils.XP));
+                                        attacker.RPGGold += combatResult.Spoils.Gold;
+                                        attacker.RPGXP += combatResult.Spoils.XP;
+                                        attacker.CheckLevelUp(e);
+                                    }
+                                }                             
                                 else if (target.UserId == attacker.UserId)
                                 {
                                     await e.Channel.SendMessage(
                                         String.Format("Oh. Looks like {0} managed to kill themselves. You lost {1} XP.", e.User.Name, target.RPGLevel * 3));
-                                    target.RPGHitpoints = 0;
-                                    target.Alive = false;
-                                    target.RPGLosses++;
-
-                                    Beta.UserStateRepository.Save();
+                                    target.Die();                                                                        
                                     if (r.Next(1, 5) == 3)
                                     {
                                         int lostGold = r.Next(1,5) * target.RPGLevel;
@@ -385,8 +573,13 @@ namespace Beta.Modules
                         }
                         else
                         {
-                            
+                           await
+                           e.Channel.SendMessage(
+                               String.Format("{0} attacked {1} with the {2} {3} of {4} for {5} points of damage!",
+                               e.User.Name, e.GetArg("target"), WeaponPrefixList.GetRandom(), WeaponList.GetRandom(),
+                               WeaponSuffixList.GetRandom(), damage));
                         }
+                        Beta.UserStateRepository.Save();
                     }
                     else if (!attacker.Alive)
                     {
@@ -394,7 +587,60 @@ namespace Beta.Modules
                     }
 
                 });
+
+                cgb.CreateCommand("drink")                
+                .Description("Drink either a Stamina or Healing potion. Stamina potions recover 2-4 Stamina and Healing potions recover 12-25 Hitpoints")
+                .Parameter("potionType", ParameterType.Unparsed)
+                .Do(async e =>
+                {
+                    UserState usr = Beta.UserStateRepository.GetUserState(e.User.Id);
+                    if (usr == null)
+                    {
+                        Beta.UserStateRepository.AddUser(e.User);
+                        usr = Beta.UserStateRepository.GetUserState(e.User.Id);
+                    }                  
+                    switch (e.GetArg("potionType").Trim().ToLower())
+                    {
+                        case "healing":
+                            if (usr.RPGHealingPotions > 1)
+                            {
+                                await
+                                    e.User.SendMessage(String.Format("You drank a healing poition! Healed for {0}!",
+                                        usr.DrinkHealingPotion()));
+                            }
+                            else
+                            {
+                                await e.User.SendMessage("You don't even have any healing potions!");
+                            }
+                            break;
+                        case "stamina":
+                            if (usr.RPGStaminaPotions > 1)
+                            {
+                                await
+                                    e.User.SendMessage(String.Format("You drank a Stamina poition! Recovered {0} stamina!",
+                                        usr.DrinkStaminaPotion()));
+                            }
+                            else
+                            {
+                                await e.User.SendMessage("You don't even have any Stamina potions!");
+                            }
+                            break;
+                        default:
+                            await
+                                e.User.SendMessage(
+                                    "Sorry, I don't recognize that type of potion. Please use either \"$drink healing\" or \"$drink stamina\".");
+                            break;
+                    }
+                });
                 
+                cgb.CreateCommand("inventory")
+                .Alias("inv")
+                .Description("Check your inventory for Chat battle, sent via PM")
+                .Do(async e =>
+                {
+                    UserState usr = Beta.UserStateRepository.GetUserState(e.User.Id);
+                    await e.User.SendMessage(String.Format(RPGInv, usr.RPGHealingPotions, usr.RPGStaminaPotions));
+                });
             });
         }
     }

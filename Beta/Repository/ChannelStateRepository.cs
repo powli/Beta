@@ -26,23 +26,26 @@ namespace Beta.Repository
 
         public void AddChannel(Channel chnl, Server srvr)
         {
-            if (!VerifyChannelExists(chnl.Id))
+            if (srvr != null && chnl != null)
             {
-                ChannelStates.Add(new ChannelState()
+                if (!VerifyChannelExists(chnl.Id))
                 {
-                    ChannelID = chnl.Id,
-                    ChannelName = chnl.Name,
-                    ChannelType = chnl.Type.Value,
-                    ServerID = srvr.Id,
-                    ServerName = srvr.Name,
-                });
-                Save();
-            }
+                    ChannelStates.Add(new ChannelState()
+                    {
+                        ChannelID = chnl.Id,
+                        ChannelName = chnl.Name,
+                        ChannelType = chnl.Type.Value,
+                        ServerID = srvr.Id,
+                        ServerName = srvr.Name,
+                    });
+                    Save();
+                }
+            }            
         }
 
         public bool VerifyChannelExists(ulong id)
         {
-            if (ChannelStates.FirstOrDefault(cs => cs.ChannelID == id) != null) return true;
+            if (GetChannelState(id) != null) return true;
             else return false;
         }
 

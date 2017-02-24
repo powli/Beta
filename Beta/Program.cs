@@ -17,6 +17,7 @@ using Beta.Repository;
 using Beta.Utils;
 using Newtonsoft.Json;
 using Discord.API.Client.Rest;
+using Discord.Legacy;
 using TextMarkovChains;
 using Tweetinvi;
 using Tweetinvi.Models;
@@ -24,7 +25,7 @@ using Tweetinvi.Streaming;
 
 namespace Beta
 {
-    class Beta
+    public class Beta
     {
         public static void Main(string[] args) => new Beta().Start(args);
         public static Converter conv = new Converter();
@@ -36,6 +37,7 @@ namespace Beta
         private const string AppName = "$Beta"; // Change this to the name of your bot
         public static Configuration Config { get; set; }
         private DiscordClient _client;
+        public List<Server> Servers { get; set; }        
 
         public event EventHandler<QuoteAddedEventArgs> QuoteAdded;
 
@@ -59,6 +61,10 @@ namespace Beta
         public static int numpost = 0;
         public List<List<String>> TableFlipResponses { get; private set; }
 
+        public void SaveReposToFile()
+        {
+            MarkovChainRepository.save("MarkovChainMemory.xml");            
+        }
 
         private void Start(string[] args)
         {
@@ -102,7 +108,7 @@ namespace Beta
             _client.Log.Message += (s, e) => WriteLog(e);
             _client.MessageReceived += (s, e) =>
             {
-                ChannelStateRepository.AddChannel(e.Channel, e.Server);
+                if (!e.Message.Channel.IsPrivate)ChannelStateRepository.AddChannel(e.Channel, e.Server);
                 UserStateRepository.AddUser(e.User);
 
                 if (!e.Channel.IsPrivate) LogToFile(e.Server, e.Channel, e.User, e.Message.Text);
@@ -165,10 +171,9 @@ namespace Beta
                         Console.WriteLine("[HIGH PRIORITY ALERT] Reminding Donald Trump he is a loser failed.");
                     }*//*
                 }*/
-                if (!e.User.IsBot && !(e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0) && !e.Message.Text.StartsWith("$"))
+                if (!e.User.IsBot && !(e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0) && !e.Message.Text.StartsWith("$") && e.Channel.Id != 94474640193236992 && e.Channel.Id != 183351398501449728)
                 {
-                    MarkovChainRepository.feed(e.Message.Text);
-                    MarkovChainRepository.save("MarkovChainMemory.xml");
+                    MarkovChainRepository.feed(e.Message.Text);                    
                 }
             };
 
@@ -203,10 +208,15 @@ namespace Beta
                 MarkovChainRepository = new MultiDeepMarkovChain(3);
                 TrumpMarkovChain = new MultiDeepMarkovChain(3);
                 HillaryMarkovChain = new MultiDeepMarkovChain(3);
+                System.Timers.Timer SaveRepos = new System.Timers.Timer(60 * 1000.00);
+                SaveRepos.AutoReset = true;
+                SaveRepos.Elapsed += (sender, e) => SaveReposToFile();
+                SaveRepos.Start();
                 System.Timers.Timer StaminaTimer = new System.Timers.Timer(60 * 1000.00);
                 StaminaTimer.AutoReset = true;
-                StaminaTimer.Elapsed += (sender, e) => Beta.UserStateRepository.RefreshStamina();
+                StaminaTimer.Elapsed += (sender, e) => Beta.UserStateRepository.UpdateUserStates(this);
                 StaminaTimer.Start();
+                Servers = _client.Servers.ToList();
 
                 Auth.SetUserCredentials(Config.TwitterConsumerKey, Config.TwitterConsumerSecret, Config.TwitterAccessToken, Config.TwitterAccessSecret);
 
@@ -419,6 +429,30 @@ namespace Beta
             }
         }
 
+        public Discord.User GetUser(ulong id)
+        {
+            foreach (Server srvr in Servers)
+            {
+                foreach (Discord.User usr in srvr.Users)
+                {
+                    if (usr.Id == id) return usr;
+                }
+            }
+            return null;
+        }
+
+        public Channel GetChannel(ulong id)
+        {
+            foreach (Server srvr in Servers)
+            {
+                foreach (Channel chnl in srvr.TextChannels)
+                {
+                    if (chnl.Id == id) return chnl;
+                }
+            }            
+            return null;
+        }
+
         public static bool CheckModuleState(MessageEventArgs e, string module, bool isDirectMessage)
         {
             ulong srvrid = e.Server.Id;
@@ -527,6 +561,8 @@ namespace Beta
             }
             return PermissionLevel.User;
         }
+
+        
 
         public async void ChangeExpression(string face, string name)
         {

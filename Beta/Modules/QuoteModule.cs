@@ -36,17 +36,24 @@ namespace Beta.Modules
                     {
                         string name = e.GetArg("speaker").Trim();
                         Author author = Beta.QuoteRepository.GetAuthor(name);
+                        if (name.ToLower() == "random")
+                        {
+                            author = Beta.QuoteRepository.Authors.GetRandom();
+                        }
                         if (author == null)
                         {
                             await e.Channel.SendMessage("Could not find author: '" + e.GetArg("Speaker") + "'");
                         }
+                        
                         else
                         {
                             string reply = string.Format(_QuoteFormat,
                                 ReplaceVariables(author.Quotes.GetRandom().Text, e.Message.User.Name), author.Name);
                             await e.Channel.SendMessage(reply);
                         }
+
                     }
+
                 });
 
                 cgb.CreateCommand("list")
@@ -117,7 +124,7 @@ namespace Beta.Modules
                 {
                     if (Beta.CheckModuleState(e, "quote", e.Channel.IsPrivate))
                     {
-                        msg = "";
+                        string msg = "";
                         await e.User.SendMessage("Oh yeah sure one sec... I got quotes for all these guys: ");
                         Beta.QuoteRepository.Authors = Beta.QuoteRepository.Authors.OrderBy(item => item.Name).ToList();
                         foreach (Author author in Beta.QuoteRepository.Authors)
