@@ -116,6 +116,9 @@ namespace Beta.Repository
         [XmlAttribute]
         public bool PoliticsEnabled { get; set; } = false;
 
+        [XmlAttribute]
+        public bool ChatBattleEnabled { get; set; } = false;
+
         public bool ToggleFeatureBool(string module)
         {
             switch (module)
@@ -150,6 +153,9 @@ namespace Beta.Repository
                 case "politics":
                     PoliticsEnabled = !PoliticsEnabled;
                     return PoliticsEnabled;
+                case "battle":
+                    ChatBattleEnabled = !ChatBattleEnabled;
+                    return ChatBattleEnabled;
                 default:
                     return false;
             }

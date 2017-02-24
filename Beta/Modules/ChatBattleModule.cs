@@ -454,7 +454,7 @@ namespace Beta.Modules
                         attacker = Beta.UserStateRepository.GetUserState(e.User.Id);
                     }
                     int damage = (int)((attacker.RPGLevel * .25) * r.Next(4, 50));
-                    if (Beta.CheckModuleState(e, "table", e.Channel.IsPrivate) && attacker.Alive)
+                    if (Beta.CheckModuleState(e, "battle", e.Channel.IsPrivate) && attacker.Alive)
                     {                                                    
                         if (e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target")) != null)
                         {

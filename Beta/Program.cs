@@ -438,6 +438,8 @@ namespace Beta
                     return (srvr.NoteModuleEnabled || chnl.NoteModuleEnabled);
                 case "politics":
                     return (srvr.PoliticsEnabled || chnl.PoliticsEnabled);
+                case "battle":
+                    return (srvr.ChatBattleEnabled || chnl.ChatBattleEnabled);
                 default:
                     return false;
             }
@@ -496,6 +498,8 @@ namespace Beta
                     return (srvr.NoteModuleEnabled || chnl.NoteModuleEnabled);
                 case "politics":
                     return (srvr.PoliticsEnabled || chnl.PoliticsEnabled);
+                case "battle":
+                    return (srvr.ChatBattleEnabled || chnl.ChatBattleEnabled);
                 default:
                     return false;
             }

@@ -131,12 +131,18 @@ namespace Beta.Repository
 
         [XmlAttribute]
         public bool GamertagModuleEnabled { get; set; } = false;
+
         [XmlAttribute]
         public bool NoteModuleEnabled { get; set; } = false;
+
         [XmlAttribute]
         public bool PoliticsEnabled { get; set; } = false;
 
+        [XmlAttribute]
+        public bool ChatBattleEnabled { get; set; } = false;
+
         public bool BetaCanSpeak { get; set; } = true;
+        
 
         public void EnableBetaSpeak()
         {
@@ -182,6 +188,9 @@ namespace Beta.Repository
                 case "politics":
                     PoliticsEnabled = !PoliticsEnabled;
                     return PoliticsEnabled;
+                case "battle":
+                    ChatBattleEnabled = !ChatBattleEnabled;
+                    return ChatBattleEnabled;
                 default:
                     return false;
             }

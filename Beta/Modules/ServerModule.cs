@@ -17,7 +17,7 @@ namespace Beta.Modules
         private ModuleManager _manager;
 
         public override string Prefix { get; } = Beta.Config.CommandPrefixes.Standard;
-        public List<string> TogglableCommands = new List<string>() { "ask", "motd", "roll", "quote", "table", "twitter", "comic", "gamertag", "note", "politics" };
+        public List<string> TogglableCommands = new List<string>() { "ask", "motd", "roll", "quote", "table", "twitter", "comic", "gamertag", "note", "politics", "battle" };
 
         public override void Install(ModuleManager manager)
         {
@@ -213,7 +213,7 @@ namespace Beta.Modules
 
                 cgb.CreateCommand("stoggle")
                     .Description(
-                        "Toogles whether a module is enabled for the entire server. Please use one of the following options: Ask, MotD, Roll, Quote, Table, Twitter, Comic, Gamertag")
+                        "Toogles whether a module is enabled for the entire server. Please use one of the following options: Ask, Comic, Gamertag, MotD, Note, Quote, Roll, Table, Twitter, Politics, Battle")
                     .MinPermissions((int)PermissionLevel.ServerAdmin)
                     .Parameter("Module", ParameterType.Unparsed)
                     .Do(async e =>
@@ -238,7 +238,7 @@ namespace Beta.Modules
 
                 cgb.CreateCommand("toggle")
                         .Description(
-                            "Toogles whether a module is enabled for the channel. Please use one of the following options: Ask, MotD, Roll, Quote, Table, Twitter, Comic, Gamertag")
+                            "Toogles whether a module is enabled for the channel. Please use one of the following options: Ask, Comic, Gamertag, MotD, Note, Quote, Roll, Table, Twitter, Politics, Battle")
                         .MinPermissions((int)PermissionLevel.ChannelAdmin)
                         .Parameter("Module", ParameterType.Unparsed)
                         .Do(async e =>
@@ -280,6 +280,7 @@ namespace Beta.Modules
                             msg += "Table  :  " + srvr.TableUnflipEnabled + "\n";
                             msg += "Twitter  :  " + srvr.TwitterModuleEnabled + "\n";
                             msg += "Politics : " + srvr.PoliticsEnabled + "\n";
+                            msg += "Chat Battle : " + srvr.ChatBattleEnabled + "\n";
                             await e.Channel.SendMessage(msg);
                         }                        
                     });
@@ -303,6 +304,7 @@ namespace Beta.Modules
                             msg += "Table  :  " + chnl.TableUnflipEnabled + "\n";
                             msg += "Twitter  :  " + chnl.TwitterModuleEnabled + "\n";
                             msg += "Politics : " + chnl.PoliticsEnabled + "\n";
+                            msg += "Chat Battle : " + chnl.ChatBattleEnabled + "\n";
                             await e.Channel.SendMessage(msg);
                         }
                     });
