@@ -381,25 +381,33 @@ namespace Beta.Modules
                 .Parameter("target", ParameterType.Unparsed)
                 .Do(async e =>
                 {
+                    bool nuke = false;
                     string msg = "";
                     string target = e.GetArg("target").Trim();
+                    UserState pusher = Beta.UserStateRepository.GetUserState(e.User.Id);
+                    UserState pushee = Beta.UserStateRepository.UserStates.FirstOrDefault(us => us.UserName == target);
                     bool isAdmin = Admins.Contains(target.ToLower());                  
                     Console.WriteLine("isAdmin: "+isAdmin+" Target: "+target);
                     switch (e.User.Name)
                     {
                         case "Dart":
+                            nuke = true;
                             msg = String.Format(DartAirlock, target);
                             break;
                         case "Kalis":
+                            nuke = true;
                             msg = String.Format(KalisAirlock, target);
                             break;
                         case "Sizer":
+                            nuke = true;
                             msg = String.Format(SizerAirlock, target);
                             break;
                         case "FriendlyFire":
+                            nuke = true;
                             msg = String.Format(FFAirlock, target);
                             break;
                         case "DarkForce":
+                            nuke = true;
                             msg = String.Format(DFAirlock, target);
                             break;
                         default:
@@ -411,6 +419,22 @@ namespace Beta.Modules
                             break;
                     }
                     if (msg != "") await e.Channel.SendMessage(msg);
+                    if (nuke && pushee != null)
+                    {
+                        await e.Channel.SendMessage(
+                            String.Format("As {0}'s body floats throw space they slowly begin to lose consciousness...",target));
+                        await e.Channel.SendMessage(String.Format("{0} has slain {1}! FATALITY!",e.User.Name,target));
+                        pusher.Die();
+                    }
+                    else if (!nuke && pusher != null)
+                    {
+                        await e.Channel.SendMessage(
+                            String.Format(
+                                "As {0}'s body floats throw space they slowly begin to lose consciousness...", pusher.UserName));
+                        await e.Channel.SendMessage(
+                            String.Format("{0} managed to get themselves killed in the cold vaccum of space.", pusher.UserName));
+                        pusher.Die();
+                    }
                 });
 
                 cgb.CreateCommand("attack")
@@ -422,6 +446,8 @@ namespace Beta.Modules
                     Result betaResult = null;
                     UserState attacker = Beta.UserStateRepository.GetUserState(e.User.Id);
                     UserState target = null;
+                    UserState beta = Beta.UserStateRepository.UserStates.FirstOrDefault(us => us.UserName == "Beta");
+                    bool spoilsDelievered = false;
                     if (attacker == null)
                     {
                         Beta.UserStateRepository.AddUser(e.User);
@@ -458,8 +484,78 @@ namespace Beta.Modules
                                         String.Format("{0} attacked {1} with the {2} {3} of {4} for {5} points of damage! You drew blood!",
                                         e.User.Name, e.GetArg("target"), WeaponPrefixList.GetRandom(), WeaponList.GetRandom(),
                                         WeaponSuffixList.GetRandom(), combatResult.Damage));
-                                
-                                if (target.UserName == "Beta")
+                                if (target.UserName == "R2-D2")
+                                {
+
+                                    betaResult = HandleChatCombat(beta, attacker, e);
+                                    await
+                                        e.Channel.SendMessage(
+                                            String.Format(
+                                                "Sensing my fellow bot is in danger I leap into action, stricking back with my trusty {0} {1} of {2} for {3} points of damage!",
+                                                WeaponPrefixList.GetRandom(), WeaponList.GetRandom(),
+                                                WeaponSuffixList.GetRandom(), betaResult.Damage));
+                                    //Both targets have died
+                                    if (combatResult.TargetDead && betaResult.TargetDead)
+                                    {
+                                        await
+                                            e.Channel.SendMessage(
+                                                String.Format(
+                                                    "I levied a counter attack, felling {0}. However I was too late, R2 died shortly thereafter. I shall miss you, old friend...",
+                                                    attacker.UserName));
+                                        await
+                                            e.Channel.SendMessage(String.Format("I gained {0} XP! {1} gained {2} XP!",
+                                                betaResult.Spoils.XP, attacker.UserName, combatResult.Spoils.XP));
+                                        attacker.RPGXP += combatResult.Spoils.XP;
+                                        attacker.CheckLevelUp(e);
+                                        beta.RPGXP += betaResult.Spoils.XP;
+                                        beta.CheckLevelUp(e);
+                                    }
+                                    //Original attacker dies and R2 survives
+                                    else if (!combatResult.TargetDead && betaResult.TargetDead)
+                                    {
+                                        await
+                                            e.Channel.SendMessage(
+                                                String.Format(
+                                                    "I sure taught {0} a lesson! Leave those poor defenseless bots alone! I earned {1} XP and was able to loot {2} gold from the corpse!",
+                                                    attacker.UserName, betaResult.Spoils.XP, betaResult.Spoils.Gold));
+                                        target.RPGXP += betaResult.Spoils.XP;
+                                        target.RPGGold += betaResult.Spoils.Gold;
+                                        target.CheckLevelUp(e);
+                                    }
+                                    //Beta dies and original attacker survives
+                                    else if (combatResult.TargetDead && !betaResult.TargetDead)
+                                    {
+                                        int num = r.Next(1, 3);
+                                        await
+                                            e.Channel.SendMessage(
+                                                String.Format(
+                                                    "{0} has taken R2 down, and I was unable to put a stop to them! They gained {1} XP and found {2} gold on R2's corpse! Don't get too cocky, I'll get you next time...",
+                                                    attacker.UserName, combatResult.Spoils.XP, combatResult.Spoils.Gold));
+                                        attacker.RPGXP += combatResult.Spoils.XP;
+                                        attacker.RPGGold += combatResult.Spoils.Gold;
+                                        attacker.CheckLevelUp(e);
+                                        if (r.Next(1, 1000) == 7)
+                                        {
+
+                                            await e.Channel.SendMessage(
+                                                String.Format(
+                                                    "Upon further examination of R2's body you also discover {0} healing potions!",
+                                                    num));
+                                            attacker.RPGHealingPotions += num;
+                                            num = r.Next(1, 3);
+                                        }
+                                        else if (r.Next(1, 1000) == 3)
+                                        {
+                                            await e.Channel.SendMessage(
+                                                String.Format(
+                                                    "Upon further examination of R2's body you also disover {0} stamina potions!",
+                                                    num));
+                                            attacker.RPGStaminaPotions += num;
+                                        }
+                                    }
+
+                                }
+                                else if (target.UserName == "Beta")
                                 {
                                     betaResult = HandleChatCombat(target, attacker, e);
                                     await
@@ -526,7 +622,7 @@ namespace Beta.Modules
 
                                     }
                                 }                                
-                                else if (target.UserId != attacker.UserId)
+                                else if (target.UserId != attacker.UserId && !spoilsDelievered)
                                 {
                                     if (combatResult.TargetDead)
                                     {
