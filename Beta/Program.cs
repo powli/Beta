@@ -143,7 +143,7 @@ namespace Beta
                 }
                 else if (e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0 &&
                          CheckModuleState(e, "table", e.Channel.IsPrivate) && !e.Message.Text.StartsWith("$") && !e.User.IsBot )
-                {
+                {//Hopefully this will loop until generateSentence() actually returns a value.
                     bool msgNotSet = true;
                     msg = "";
                     while (msgNotSet)
