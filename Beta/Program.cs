@@ -144,7 +144,21 @@ namespace Beta
                 else if (e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0 &&
                          CheckModuleState(e, "table", e.Channel.IsPrivate) && !e.Message.Text.StartsWith("$") && !e.User.IsBot )
                 {
-                    e.Channel.SendMessage(MarkovChainRepository.generateSentence());
+                    bool msgNotSet = true;
+                    msg = "";
+                    while (msgNotSet)
+                    {
+                        try
+                        {
+                            msg = MarkovChainRepository.generateSentence();
+                            msgNotSet = false;
+                        }
+                        catch(Exception e)
+                        {
+                            Console.WriteLine("Failed to generate a sentence, trying again...");
+                        }
+                    }
+                    e.Channel.SendMessage(msg);
                 }
                 /*else if (e.Message.Text.IndexOf("hillary", StringComparison.OrdinalIgnoreCase) >= 0 ||
                          e.Message.Text.IndexOf("clinton", StringComparison.OrdinalIgnoreCase) >= 0 &&
