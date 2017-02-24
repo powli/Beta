@@ -145,7 +145,7 @@ namespace Beta
                          CheckModuleState(e, "table", e.Channel.IsPrivate) && !e.Message.Text.StartsWith("$") && !e.User.IsBot )
                 {//Hopefully this will loop until generateSentence() actually returns a value.
                     bool msgNotSet = true;
-                    msg = "";
+                    string msg = "";
                     while (msgNotSet)
                     {
                         try
@@ -153,7 +153,7 @@ namespace Beta
                             msg = MarkovChainRepository.generateSentence();
                             msgNotSet = false;
                         }
-                        catch(Exception e)
+                        catch(Exception ex)
                         {
                             Console.WriteLine("Failed to generate a sentence, trying again...");
                         }
