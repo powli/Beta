@@ -470,7 +470,7 @@ namespace Beta.Modules
                             attacker.RPGStamina--;
                             if (attacker.RPGStamina == 0) e.User.SendMessage("You feel exhausted...");
                             if (target.RPGHitpoints == 0 && target.UserName == "Beta") target.Res(1);
-                            if (target.RPGHitpoints == 0)
+                            if (!target.Alive)
                             {
                                 await
                                     e.Channel.SendMessage(
