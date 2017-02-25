@@ -7,6 +7,7 @@ using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using System.IO;
+using System.Net;
 using System.Timers;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -18,10 +19,12 @@ using Beta.Utils;
 using Newtonsoft.Json;
 using Discord.API.Client.Rest;
 using Discord.Legacy;
+using Octokit;
 using TextMarkovChains;
 using Tweetinvi;
 using Tweetinvi.Models;
 using Tweetinvi.Streaming;
+using FileMode = System.IO.FileMode;
 
 namespace Beta
 {
@@ -37,7 +40,9 @@ namespace Beta
         private const string AppName = "$Beta"; // Change this to the name of your bot
         public static Configuration Config { get; set; }
         private DiscordClient _client;
-        public List<Server> Servers { get; set; }        
+        public List<Server> Servers { get; set; }
+        public GitHubClient Git { get; set; }
+        public Octokit.Repository BetaRepository { get; set; }                
 
         public event EventHandler<QuoteAddedEventArgs> QuoteAdded;
 
@@ -222,15 +227,15 @@ namespace Beta
                 MarkovChainRepository = new MultiDeepMarkovChain(3);
                 TrumpMarkovChain = new MultiDeepMarkovChain(3);
                 HillaryMarkovChain = new MultiDeepMarkovChain(3);
-                System.Timers.Timer SaveRepos = new System.Timers.Timer(60 * 1000.00);
-                SaveRepos.AutoReset = true;
-                SaveRepos.Elapsed += (sender, e) => SaveReposToFile();
-                SaveRepos.Start();
-                System.Timers.Timer StaminaTimer = new System.Timers.Timer(60 * 1000.00);
-                StaminaTimer.AutoReset = true;
-                StaminaTimer.Elapsed += (sender, e) => Beta.UserStateRepository.UpdateUserStates(this);
-                StaminaTimer.Start();
-                Servers = _client.Servers.ToList();
+                System.Timers.Timer BetaUpdateTimer = new System.Timers.Timer(60 * 1000.00);
+                BetaUpdateTimer.AutoReset = true;
+                BetaUpdateTimer.Elapsed += (sender, e) => BetaUpdateTick();
+                BetaUpdateTimer.Start();
+                Git = new GitHubClient(new ProductHeaderValue("Beta-cool-app"));
+                Git.Credentials = new Credentials(Config.GithubAccessToken);
+                BetaRepository = await Git.Repository.Get("OtherwiseJunk", "Beta");
+                
+
 
                 Auth.SetUserCredentials(Config.TwitterConsumerKey, Config.TwitterConsumerSecret, Config.TwitterAccessToken, Config.TwitterAccessSecret);
 
@@ -378,6 +383,48 @@ namespace Beta
                 };
                 await stream.StartStreamAsync();
             });
+        }
+
+        public void BetaUpdateTick()
+        {
+            SaveReposToFile();
+            UserStateRepository.UpdateUserStates(this);
+        }
+
+        public void CheckForGithubUpdates()
+        {            
+            GithubCommitResponse response = GetCommitResponse();
+            DateTime lastKnownCommitTime = response.Commits.FirstOrDefault(gc => gc.sha == Config.LastGithubCommit).commit.committer.date;
+            foreach (CommitData commitdata in response.Commits)
+            {
+                if (commitdata.commit.committer.date > lastKnownCommitTime)
+                {
+                    AnnounceCommitMessage(commitdata);
+                    Config.LastGithubCommit = commitdata.sha;
+                    Configuration.ConfigHandler.SaveConfig();
+                }
+            }
+        }
+
+        public void AnnounceCommitMessage(CommitData commitData)
+        {
+            foreach (ChannelState chnl in Beta.ChannelStateRepository.ChannelStates)
+            {
+                string msg = "Looks like a new commit was added!\n";
+                msg += "``` " + commitData.commit.message + "```";
+                if (chnl.ChatBattleEnabled)
+                {
+                    GetChannel(chnl.ChannelID).SendMessage("fillthisinlater");
+                }
+            }
+        }
+
+        public GithubCommitResponse GetCommitResponse()
+        {
+            var request = (HttpWebRequest)WebRequest.Create("https://api.github.com/repos/OtherwiseJunk/Beta/commits");
+            var response = (HttpWebResponse)request.GetResponse();
+            var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
+            return JsonConvert.DeserializeObject<GithubCommitResponse>(responseString);
         }
 
         public static void IngestTwitterHistory()

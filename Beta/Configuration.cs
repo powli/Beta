@@ -38,6 +38,8 @@ namespace Beta.JSONConfig
         public string TwitterConsumerSecret { get; set; }
         public string TwitterAccessToken { get; set; }
         public string TwitterAccessSecret { get; set; }
+        public string GithubAccessToken { get; set; }
+        public string LastGithubCommit { get; set; }
         public List<ulong> _TwitterInstalledChannels { get; set; } = new List<ulong>();
 
         public class CommandPrefixesModel

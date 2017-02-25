@@ -11,7 +11,7 @@ using Tweetinvi;
 using User = Discord.User;
 
 namespace Beta.Repository
-{
+{//d9b81799de621722acdba808d34d9123c99bdee8
     [Serializable]
     public class UserStateRepository 
     {
