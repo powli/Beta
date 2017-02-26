@@ -123,7 +123,17 @@ namespace Beta.Repository
                     usr.Alive = false;
                     usr.RPGHitpoints = 0;
                 }
-                usr.CheckLevelUp(beta.GetUser(usr.UserId));
+                try
+                {
+                    usr.CheckLevelUp(beta.GetUser(usr.UserId));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[UserStateRepository] Checking level-up for user failed.");
+                    Console.WriteLine("[UserStateRepository] Error Message:"+ex.Message);
+                    Console.WriteLine("[UserStateRepository] User ID: " + usr.UserId+" Username: "+usr.UserName);
+                }
+                
             }
             Save();
         }

@@ -11,6 +11,7 @@ using System.Net;
 using System.Timers;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using Beta.Modules;
 using Beta.JSONConfig;
@@ -25,9 +26,21 @@ using Tweetinvi;
 using Tweetinvi.Models;
 using Tweetinvi.Streaming;
 using FileMode = System.IO.FileMode;
+using User = Discord.User;
 
-namespace Beta
+namespace Beta    
 {
+    public class QueuedMessage
+    {
+        public string Message;
+        public ulong ChannelId;
+
+        public QueuedMessage(string msg, ulong id)
+        {
+            Message = msg;
+            ChannelId = id;
+        }
+    }
     public class Beta
     {
         public static void Main(string[] args) => new Beta().Start(args);
@@ -41,8 +54,10 @@ namespace Beta
         public static Configuration Config { get; set; }
         private DiscordClient _client;
         public List<Server> Servers { get; set; }
+        public List<Discord.User> Users { get; set; }
         public GitHubClient Git { get; set; }
-        public Octokit.Repository BetaRepository { get; set; }                
+        public Octokit.Repository BetaRepository { get; set; }       
+        public List<QueuedMessage> MessageQueue { get; set; }         
 
         public event EventHandler<QuoteAddedEventArgs> QuoteAdded;
 
@@ -71,6 +86,19 @@ namespace Beta
             MarkovChainRepository.save("MarkovChainMemory.xml");            
         }
 
+        public List<User> BuildUserList()
+        {
+            List<User> users = new List<User>();
+            foreach (Server srv in Servers)
+            {
+                foreach (User usr in srv.Users)
+                {
+                    if (!users.Contains(usr)) users.Add(usr);
+                }
+            }
+            return users;
+        }
+
         private void Start(string[] args)
         {
             #region configfile
@@ -78,6 +106,9 @@ namespace Beta
             try
             {
                 Config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText("data/config.json"));
+                Configuration.ConfigHandler.SaveConfig();
+                Console.WriteLine("test");
+                Console.WriteLine(Config.LastGithubCommit);
             }
             catch (Exception ex)
             {
@@ -213,11 +244,12 @@ namespace Beta
             _client.AddModule<ComicModule>("Comics", ModuleFilter.None);
             _client.AddModule<GamertagModule>("Gamertag", ModuleFilter.None);
             _client.AddModule<NoteModule>("Note", ModuleFilter.None);
-            _client.AddModule<ChatBattleModule>("Chat Battle", ModuleFilter.None);
+            _client.AddModule<ChatBattleModule>("Chat Battle", ModuleFilter.None);           
 
             _client.ExecuteAndWait(async () =>
             {
                 await _client.Connect(Config.Token, TokenType.Bot);
+                MessageQueue = new List<QueuedMessage>();
                 QuoteRepository = QuoteRepository.LoadFromDisk();
                 ChannelStateRepository = ChannelStateRepository.LoadFromDisk();
                 ServerStateRepository = ServerStateRepository.LoadFromDisk();
@@ -227,13 +259,29 @@ namespace Beta
                 MarkovChainRepository = new MultiDeepMarkovChain(3);
                 TrumpMarkovChain = new MultiDeepMarkovChain(3);
                 HillaryMarkovChain = new MultiDeepMarkovChain(3);
+                Servers = _client.Servers.ToList();
+                BuildUserList();
                 System.Timers.Timer BetaUpdateTimer = new System.Timers.Timer(60 * 1000.00);
                 BetaUpdateTimer.AutoReset = true;
-                BetaUpdateTimer.Elapsed += (sender, e) => BetaUpdateTick();
+                BetaUpdateTimer.Elapsed += (sender, e) =>
+                {                    
+                    BetaUpdateTick();
+                };
                 BetaUpdateTimer.Start();
-                Git = new GitHubClient(new ProductHeaderValue("Beta-cool-app"));
+                System.Timers.Timer BetaAsyncUpdateTimer = new System.Timers.Timer(3 * 1000);
+                BetaAsyncUpdateTimer.AutoReset = true;
+                BetaAsyncUpdateTimer.Elapsed += (sender, e) =>
+                {
+                    foreach (QueuedMessage msg in MessageQueue)
+                    {
+                        GetChannel(msg.ChannelId).SendMessage(msg.Message);
+                        MessageQueue.Remove(msg);
+                    }
+                };
+                BetaAsyncUpdateTimer.Start();
+               
+                Git = new GitHubClient(new ProductHeaderValue("my-cool-app"));
                 Git.Credentials = new Credentials(Config.GithubAccessToken);
-                BetaRepository = await Git.Repository.Get("OtherwiseJunk", "Beta");
                 
 
 
@@ -389,42 +437,38 @@ namespace Beta
         {
             SaveReposToFile();
             UserStateRepository.UpdateUserStates(this);
+            CheckForGithubUpdates();
         }
 
         public void CheckForGithubUpdates()
         {            
-            GithubCommitResponse response = GetCommitResponse();
-            DateTime lastKnownCommitTime = response.Commits.FirstOrDefault(gc => gc.sha == Config.LastGithubCommit).commit.committer.date;
-            foreach (CommitData commitdata in response.Commits)
+            var commits = Git.Repository.Commit.GetAll("OtherwiseJunk", "Beta").Result;            
+            DateTime lastKnownCommitTime =
+                commits.FirstOrDefault(gc => gc.Sha == Config.LastGithubCommit).Commit.Committer.Date.DateTime;            
+            foreach (GitHubCommit commit in commits)
             {
-                if (commitdata.commit.committer.date > lastKnownCommitTime)
+                if (commit.Commit.Committer.Date > lastKnownCommitTime)
                 {
-                    AnnounceCommitMessage(commitdata);
-                    Config.LastGithubCommit = commitdata.sha;
-                    Configuration.ConfigHandler.SaveConfig();
+                    Console.WriteLine("[Beta] Got a hit!");
+                    AnnounceCommitMessage(commit);
+                    Config.LastGithubCommit = commit.Sha;                                        
+                    Console.WriteLine("[Beta] Processed the hit.");
                 }
             }
+            Configuration.ConfigHandler.SaveConfig();
         }
 
-        public void AnnounceCommitMessage(CommitData commitData)
+        public async void AnnounceCommitMessage(GitHubCommit commit)
         {
             foreach (ChannelState chnl in Beta.ChannelStateRepository.ChannelStates)
             {
                 string msg = "Looks like a new commit was added!\n";
-                msg += "``` " + commitData.commit.message + "```";
+                msg += "``` " + commit.Commit.Message + "```";
                 if (chnl.ChatBattleEnabled)
                 {
-                    GetChannel(chnl.ChannelID).SendMessage("fillthisinlater");
+                    MessageQueue.Add(new QueuedMessage(msg,chnl.ChannelID));
                 }
             }
-        }
-
-        public GithubCommitResponse GetCommitResponse()
-        {
-            var request = (HttpWebRequest)WebRequest.Create("https://api.github.com/repos/OtherwiseJunk/Beta/commits");
-            var response = (HttpWebResponse)request.GetResponse();
-            var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
-            return JsonConvert.DeserializeObject<GithubCommitResponse>(responseString);
         }
 
         public static void IngestTwitterHistory()
@@ -492,16 +536,20 @@ namespace Beta
             }
         }
 
-        public Discord.User GetUser(ulong id)
+        public User GetUser(ulong id)
         {
             foreach (Server srvr in Servers)
             {
-                foreach (Discord.User usr in srvr.Users)
+                foreach (User usr in srvr.Users)
                 {
-                    if (usr.Id == id) return usr;
+                    if (usr.Id == id)
+                    {
+                        return usr;
+                    }
                 }
             }
             return null;
+
         }
 
         public Channel GetChannel(ulong id)
