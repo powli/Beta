@@ -305,37 +305,7 @@ namespace Beta.Modules
             "dart",
             "darkforce",
             "kalis"
-        };
-
-        public User GetUser(ulong id)
-        {
-            foreach (Server srvr in _client.Servers)
-            {
-                foreach (User usr in srvr.Users)
-                {
-                    if (usr.Id == id) return usr;
-                }
-            }
-            return null;
-        }
-        
-
-        public Result HandleChatCombat(UserState attacker, UserState target, CommandEventArgs e)
-        {
-            int dmg = (int)((attacker.RPGLevel * .25) * r.Next(4, 50));
-            if (attacker.UserName == "Beta") dmg =(int) ((target.RPGLevel * .25) * r.Next(8, 100));
-            target.RPGHitpoints -= dmg;
-            if (target.RPGHitpoints <= 0)
-            {
-                Spoils spoils = attacker.ScoreKill(target, e);
-                target.Die();
-                return new Result(true, dmg, spoils);
-            }
-            else
-            {
-                return new Result(false, dmg);
-            }
-        }
+        };        
 
         public override void Install(ModuleManager manager)
         {
@@ -492,7 +462,7 @@ namespace Beta.Modules
 
                                 if (target.UserName == "R2-D2")
                                 {
-
+                                    //This section is going to be a little messy until the new UserStates are in place.
                                     betaResult = HandleChatCombat(beta, attacker, e);
                                     await
                                         e.Channel.SendMessage(
@@ -567,6 +537,7 @@ namespace Beta.Modules
                                 #region Beta Counterattack Logic
                                 else if (target.UserName == "Beta")
                                 {
+                                    //This section is going to be a little messy until the new UserStates are in place.
                                     betaResult = HandleChatCombat(target, attacker, e);
                                     await
                                         e.Channel.SendMessage(
@@ -584,10 +555,19 @@ namespace Beta.Modules
                                                     "I levied a counter attack, felling {0}. However I was fatal wounded, and died shortly thereafter. I shall return...",attacker.UserName));
                                         await
                                             e.Channel.SendMessage(String.Format("I gained {0} XP! {1} gained {2} XP!",
-                                                betaResult.Spoils.XP, attacker.UserName, combatResult.Spoils.XP));
-                                        attacker.RPGXP += combatResult.Spoils.XP;
+                                                betaResult.Spoils.XP, attacker.UserName, combatResult.Spoils.XP));                                        
                                         attacker.CheckLevelUp(e);
-                                        target.RPGXP += betaResult.Spoils.XP;
+                                        /* Due to the ScoreKill method currently
+                                         * adding spoils we must undo "pickup" gains
+                                         * of gold and potions.
+                                         * 
+                                         * Once Beta has its own user state for 
+                                         * calculating spoils this can be handled
+                                         * by Beta directly.
+                                         */
+                                        attacker.RPGHealingPotions -= combatResult.Spoils.HealthPot;
+                                        attacker.RPGStaminaPotions -= combatResult.Spoils.StamPot;
+                                        attacker.RPGGold -= combatResult.Spoils.Gold;
                                         target.CheckLevelUp(e);
                                     }
                                     //Original attacker dies and Beta survives
@@ -597,8 +577,6 @@ namespace Beta.Modules
                                             e.Channel.SendMessage(
                                                 String.Format(
                                                     "I sure taught {0} a lesson! I earned {1} XP and was able to loot {2} gold from the corpse!",attacker.UserName,betaResult.Spoils.XP,betaResult.Spoils.Gold));
-                                        target.RPGXP += betaResult.Spoils.XP;
-                                        target.RPGGold += betaResult.Spoils.Gold;
                                         target.CheckLevelUp(e);
                                     }
                                     //Beta dies and original attacker survives
@@ -610,8 +588,6 @@ namespace Beta.Modules
                                                 String.Format(
                                                     "{0} has taken me down! They gained {1} XP and found {2} gold on my corpse! Don't get too cocky, I'll be back.",
                                                     attacker.UserName, combatResult.Spoils.XP, combatResult.Spoils.Gold));
-                                        attacker.RPGXP += combatResult.Spoils.XP;
-                                        attacker.RPGGold += combatResult.Spoils.Gold;
                                         attacker.CheckLevelUp(e);
                                         if (r.Next(1, 100) == 7)
                                         {
@@ -644,15 +620,11 @@ namespace Beta.Modules
                                         e.Channel.SendMessage(
                                             String.Format(
                                                 "That hit killed {0}! {1} found {2} gold on their corpse! Gained {3} XP!",
-                                                target.UserName, e.User.Name, combatResult.Spoils.Gold, combatResult.Spoils.XP));
-                                        attacker.RPGGold += combatResult.Spoils.Gold;
-                                        attacker.RPGXP += combatResult.Spoils.XP;
+                                                target.UserName, e.User.Name, combatResult.Spoils.Gold, combatResult.Spoils.XP));                                        
                                         attacker.CheckLevelUp(e);
                                         if (combatResult.Spoils.HealthPot > 0 || combatResult.Spoils.StamPot > 0)
                                         {
                                             await e.Channel.SendMessage(String.Format("Looks like you also managed to find some potions! Gained {0} Health Potions and {1} Stamina Potions.",combatResult.Spoils.HealthPot,combatResult.Spoils.StamPot));
-                                            attacker.RPGHealingPotions += combatResult.Spoils.HealthPot;
-                                            attacker.RPGStaminaPotions += combatResult.Spoils.StamPot;
                                         }
                                     }
                                 }
@@ -767,10 +739,7 @@ namespace Beta.Modules
 
         public bool ValidChatBattleTarget(CommandEventArgs e)
         {
-            return e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target")) != null;
-
-                
-            
+            return e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target")) != null;                            
         }
 
         public UserState GetTargetUserState(CommandEventArgs e)
@@ -783,6 +752,36 @@ namespace Beta.Modules
                 return target;
             }
             return null;
+        }
+
+        public User GetUser(ulong id)
+        {
+            foreach (Server srvr in _client.Servers)
+            {
+                foreach (User usr in srvr.Users)
+                {
+                    if (usr.Id == id) return usr;
+                }
+            }
+            return null;
+        }
+
+
+        public Result HandleChatCombat(UserState attacker, UserState target, CommandEventArgs e)
+        {
+            int dmg = (int)((attacker.RPGLevel * .25) * r.Next(4, 50));
+            if (attacker.UserName == "Beta") dmg = (int)((target.RPGLevel * .25) * r.Next(8, 100));
+            target.RPGHitpoints -= dmg;
+            if (target.RPGHitpoints <= 0)
+            {
+                Spoils spoils = target.Die(attacker);
+                
+                return new Result(true, dmg, attacker.ScoreKill(spoils));
+            }
+            else
+            {
+                return new Result(false, dmg);
+            }
         }
     }
 }
