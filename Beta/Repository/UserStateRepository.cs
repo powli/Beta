@@ -67,6 +67,7 @@ namespace Beta.Repository
                             TableFlipPoints = 0,
                             BetaAbusePoints = 0,
                             IsImmortal = true,
+                            CanRun = false,
                             RPGMaxHP = level * (25 + r.Next(1, 25)),
                             RPGGold = level * (r.Next(1, 25)),
                             RPGLosses = 0,
@@ -83,6 +84,7 @@ namespace Beta.Repository
                             TableFlipPoints = 0,
                             BetaAbusePoints = 0,
                             IsImmortal = true,
+                            CanRun = false,
                             RPGMaxHP = level * (25 + r.Next(1, 25)),
                             RPGGold = level * (r.Next(1, 25)),
                             RPGLosses = 0,
@@ -100,6 +102,7 @@ namespace Beta.Repository
                             TableFlipPoints = 0,
                             BetaAbusePoints = 0,
                             IsImmortal = false,
+                            CanRun = true,
                             RPGMaxHP = level*(25 + r.Next(1, 25)),
                             RPGGold = level*(r.Next(1, 25)),                            
                             RPGLosses = 0,
@@ -116,8 +119,7 @@ namespace Beta.Repository
 
         public bool VerifyUsersExists(ulong id)
         {
-            if (UserStates.FirstOrDefault(us => us.UserId == id) != null) return true;
-            return false;
+            return UserStates.FirstOrDefault(us => us.UserId == id) != null;
         }
 
         internal int IncrementTableFlipPoints(ulong UsrId, int Points)
@@ -203,11 +205,31 @@ namespace Beta.Repository
             }
             Save();
         }
+
+        public bool VerifyNPCExists(string name)
+        {
+            return NPCUserStates.FirstOrDefault(nu => nu.UserName == name) != null;
+        }
     }
 
     public class NPCUserState : UserState
     {
+        private Random r = new Random();
         [XmlAttribute] public bool IsImmortal;
+        [XmlAttribute] public bool CanRun;
+        [XmlAttribute] public bool RanAway;
+
+        public bool RunAwayCheck()
+        {
+            if (CanRun) return r.Next(1, 20) == 1;
+            return false;
+
+        }
+
+        public void RunAway()
+        {
+            RanAway = true;
+        }
     }
 
     public class BetaUserState : NPCUserState
@@ -402,6 +424,21 @@ namespace Beta.Repository
             RPGHealingPotions--;
             return healing;
         }
+
+        public Result Attack(UserState target, CommandEventArgs e)
+        {
+            int dmg = (int) ((RPGLevel*.25)*r.Next(4, 50));
+            target.RPGHitpoints -= dmg;
+            if (target.RPGHitpoints <= 0)
+            {
+                Spoils spoils = target.Die(this);
+                return new Result(true, dmg, this.ScoreKill(spoils));
+            }
+            else
+            {
+                return new Result(false, dmg);
+            }
+        }
     }
 
     public struct Spoils
@@ -418,6 +455,26 @@ namespace Beta.Repository
             XP = xp;
             HealthPot = healthPot;
             StamPot = stamPot;
+        }
+    }
+
+    public class Result
+    {
+        public bool TargetDead;
+        public int Damage;
+        public Spoils Spoils;
+
+        public Result(bool dead, int dmg)
+        {
+            TargetDead = dead;
+            Damage = dmg;
+        }
+
+        public Result(bool dead, int dmg, Spoils spoils)
+        {
+            TargetDead = dead;
+            Damage = dmg;
+            Spoils = spoils;
         }
     }
 }

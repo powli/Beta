@@ -10,30 +10,12 @@ using Beta.Repository;
 using RestSharp.Validation;
 
 namespace Beta.Modules
-{
-    public class Result
-    {
-        public bool TargetDead;
-        public int Damage;
-        public Spoils Spoils;
-
-        public Result(bool dead, int dmg)
-        {
-            TargetDead = dead;
-            Damage = dmg;
-        }
-
-        public Result(bool dead, int dmg, Spoils spoils)
-        {
-            TargetDead = dead;
-            Damage = dmg;
-            Spoils = spoils;
-        }
-    }
+{    
     class ChatBattleModule : DiscordModule
     {
         private DiscordClient _client;
         private ModuleManager _manager;
+        private BetaUserState BetaState;
         Random r = new Random();
         public override string Prefix { get; } = "$";
 
@@ -311,6 +293,7 @@ namespace Beta.Modules
         {
             _manager = manager;
             _client = manager.Client;
+            BetaState = (BetaUserState) Beta.UserStateRepository.NPCUserStates.FirstOrDefault(nu => nu.UserName == "Beta");
 
             manager.CreateCommands("", cgb =>
             {
@@ -451,7 +434,7 @@ namespace Beta.Modules
                             }
                             else
                             {
-                                combatResult = HandleChatCombat(attacker, target, e);
+                                combatResult = attacker.Attack(target, e);
                                 await
                                     e.Channel.SendMessage(
                                         String.Format("{0} attacked {1} with the {2} {3} of {4} for {5} points of damage! You drew blood!",
@@ -460,10 +443,11 @@ namespace Beta.Modules
 
                                 #region Handle R2-D2 being attacked
 
+                                
                                 if (target.UserName == "R2-D2")
                                 {
                                     //This section is going to be a little messy until the new UserStates are in place.
-                                    betaResult = HandleChatCombat(beta, attacker, e);
+                                    betaResult = BetaState.Attack(attacker, e);
                                     await
                                         e.Channel.SendMessage(
                                             String.Format(
@@ -529,16 +513,16 @@ namespace Beta.Modules
                                             attacker.RPGStaminaPotions += num;
                                         }
                                     }
-
+                                    
                                 }
-
+                                
 #endregion
 
                                 #region Beta Counterattack Logic
                                 else if (target.UserName == "Beta")
                                 {
                                     //This section is going to be a little messy until the new UserStates are in place.
-                                    betaResult = HandleChatCombat(target, attacker, e);
+                                    betaResult = BetaState.Attack(attacker, e);
                                     await
                                         e.Channel.SendMessage(
                                             String.Format(
@@ -739,7 +723,9 @@ namespace Beta.Modules
 
         public bool ValidChatBattleTarget(CommandEventArgs e)
         {
-            return e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target")) != null;                            
+            bool userExists = e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target")) != null;
+            bool npcExists = Beta.UserStateRepository.NPCUserStates.FirstOrDefault(u => u.UserName == e.GetArg("target")) != null;
+            return userExists || npcExists;
         }
 
         public UserState GetTargetUserState(CommandEventArgs e)
@@ -749,6 +735,12 @@ namespace Beta.Modules
             {
                 var target = Beta.UserStateRepository.GetUserState(usr.Id);
                 if (target.RPGHitpoints == -1) target.RPGHitpoints = target.RPGMaxHP;
+                return target;
+            }
+            if (Beta.UserStateRepository.VerifyNPCExists(e.GetArg("target")))
+            {
+                var target =
+                    Beta.UserStateRepository.NPCUserStates.FirstOrDefault(nu => nu.UserName == e.GetArg("target"));
                 return target;
             }
             return null;
@@ -764,24 +756,6 @@ namespace Beta.Modules
                 }
             }
             return null;
-        }
-
-
-        public Result HandleChatCombat(UserState attacker, UserState target, CommandEventArgs e)
-        {
-            int dmg = (int)((attacker.RPGLevel * .25) * r.Next(4, 50));
-            if (attacker.UserName == "Beta") dmg = (int)((target.RPGLevel * .25) * r.Next(8, 100));
-            target.RPGHitpoints -= dmg;
-            if (target.RPGHitpoints <= 0)
-            {
-                Spoils spoils = target.Die(attacker);
-                
-                return new Result(true, dmg, attacker.ScoreKill(spoils));
-            }
-            else
-            {
-                return new Result(false, dmg);
-            }
-        }
+        }       
     }
 }
