@@ -453,7 +453,8 @@ namespace Beta.Modules
                         Beta.UserStateRepository.AddUser(e.User);
                         attacker = Beta.UserStateRepository.GetUserState(e.User.Id);
                     }
-                    int damage = (int)((attacker.RPGLevel * .25) * r.Next(4, 50));
+                    double stamCost = (attacker.RPGLevel*.25);
+                    int damage = (int)(stamCost * r.Next(4, 50));
                     if (Beta.CheckModuleState(e, "battle", e.Channel.IsPrivate) && attacker.Alive)
                     {                                                    
                         if (e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target")) != null)
@@ -465,9 +466,9 @@ namespace Beta.Modules
                                 if (target.RPGHitpoints == -1) target.RPGHitpoints = target.RPGMaxHP;
                             }                            
                         }                        
-                        if (target != null && attacker.RPGStamina > 0)
+                        if (target != null && attacker.RPGStamina > stamCost)
                         {                            
-                            attacker.RPGStamina--;
+                            attacker.RPGStamina -= stamCost;
                             if (attacker.RPGStamina == 0) e.User.SendMessage("You feel exhausted...");
                             if (target.RPGHitpoints == 0 && target.UserName == "Beta") target.Res(1);
                             if (!target.Alive)
