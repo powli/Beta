@@ -3,16 +3,54 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using Beta.Modules;
 using Discord;
 using Discord.Commands;
 
 namespace Beta.Repository
 { //d9b81799de621722acdba808d34d9123c99bdee8
-
+    [XmlInclude(typeof(BetaUserState))]
     [Serializable]
     public class UserStateRepository
     {
         public const string _Filename = "UserStates.xml";
+
+        [XmlIgnore] public static List<string> NPCNames = new List<string>()
+        {
+            "Storm Trooper",
+            "Jedi",
+            "Imperial Officer",
+            "Republic Soldier",
+            "Republic Officer",
+            "Sith",
+            "Gerblin",
+            "Orc",
+            "Bounty Hunter",
+            "Elf",
+            "Dwarf",
+            "Vulcan",
+            "Rabbit",
+            "Deer",
+            "Ewok",
+            "Wookie",
+            "Hutt",
+            "Tusken Raiders",
+            "Romulan",
+            "Ferengi",
+            "Borg",
+            "Klingon",
+            "Tribble",
+            "Besalisk",
+            "Bith",
+            "Twi'lek",
+            "Jawa",
+            "Sand Person",
+            "Rodian",
+            "Gamorrean",
+            "Mon Calamari",
+            "Gungan",
+
+        };
 
         public UserStateRepository()
         {
@@ -24,6 +62,7 @@ namespace Beta.Repository
         public List<UserState> UserStates { get; set; }
         [XmlArrayItem("NPCUserState")]
         public List<NPCUserState> NPCUserStates { get; set; }
+        
 
         public void AddUser(User usr)
         {
@@ -50,17 +89,17 @@ namespace Beta.Repository
             }
         }
 
-        public void AddUser(User usr, string type)
+        public void AddUser(string name, string type)
         {
             var r = new Random();
             int level = r.Next(1, 10);
-            if (!VerifyUsersExists(usr.Id))
+            if (!VerifyNPCExists(name))
             {
                 switch (type)
                 {
                     case "beta":
                         level = 10;
-                        NPCUserStates.Add(new BetaUserState()
+                        NPCUserStates.Add((NPCUserState)new BetaUserState()
                         {
                             UserName = "Beta",
                             RPGLevel = level,
@@ -79,7 +118,7 @@ namespace Beta.Repository
                         level = r.Next(7, 10);
                         NPCUserStates.Add(new NPCUserState()
                         {                            
-                            UserName = usr.Name,
+                            UserName = name,
                             RPGLevel = level,
                             TableFlipPoints = 0,
                             BetaAbusePoints = 0,
@@ -96,8 +135,7 @@ namespace Beta.Repository
                         level = r.Next(1, 10);
                         NPCUserStates.Add(new NPCUserState()
                         {
-                            UserId = usr.Id,
-                            UserName = usr.Name,
+                            UserName = name,
                             RPGLevel = level,
                             TableFlipPoints = 0,
                             BetaAbusePoints = 0,
@@ -210,6 +248,16 @@ namespace Beta.Repository
         {
             return NPCUserStates.FirstOrDefault(nu => nu.UserName == name) != null;
         }
+
+        internal void SpawnNPCs()
+        {
+            Random r = new Random();
+            int spawnNumber = r.Next(0, 3);
+            while (spawnNumber > 0 || NPCUserStates.Count <= 12)
+            {
+                AddUser(NPCNames.GetRandom(),"npc");
+            }
+        }
     }
 
     public class NPCUserState : UserState
@@ -234,6 +282,182 @@ namespace Beta.Repository
 
     public class BetaUserState : NPCUserState
     {
+        Random r = new Random();
+
+        public Result Attack(UserState target, CommandEventArgs e)
+        {
+            int dmg = (int)((target.RPGLevel * .25) * r.Next(8, 100));
+            target.RPGHitpoints -= dmg;
+            if (target.RPGHitpoints <= 0)
+            {
+                Spoils spoils = target.Die(this);
+                return new Result(true, dmg, this.ScoreKill(spoils));
+            }
+            else
+            {
+                return new Result(false, dmg);
+            }
+        }
+
+        public Result Attack(UserState target, CommandEventArgs e, Result combatResult)
+        {
+            int dmg = (int)((target.RPGLevel * .25) * r.Next(8, 100));
+            target.RPGHitpoints -= dmg;
+            if (target.RPGHitpoints <= 0)
+            {
+                Spoils spoils = target.Die(this);
+                if (combatResult.TargetDead)
+                {
+                    spoils.Gold = 0;
+                    spoils.HealthPot = 0;
+                    spoils.StamPot = 0;
+                } 
+                
+                return new Result(true, dmg, this.ScoreKill(spoils));
+            }
+            else
+            {
+                return new Result(false, dmg);
+            }
+        }
+
+        public async void CounterAttack(UserState target, CommandEventArgs e, Result combatResult)
+        {
+            Result betaResult = Attack(target, e, combatResult);
+
+            await e.Channel.SendMessage(String.Format("I struck back with my trusty {0} {1} of {2} for {3} points of damage!",
+                                                ChatBattleModule.WeaponPrefixList.GetRandom(), ChatBattleModule.WeaponList.GetRandom(),
+                                                ChatBattleModule.WeaponSuffixList.GetRandom(), betaResult.Damage));
+
+            if (combatResult.TargetDead && betaResult.TargetDead)
+            {
+
+                await
+                    e.Channel.SendMessage(
+                        String.Format(
+                            "I levied a counter attack, felling {0}. However I was fatal wounded, and died shortly thereafter. I shall return...", target.UserName));
+                await
+                    e.Channel.SendMessage(String.Format("I gained {0} XP! {1} gained {2} XP!",
+                        betaResult.Spoils.XP, target.UserName, combatResult.Spoils.XP));
+                target.CheckLevelUp(e);
+                /* Due to the ScoreKill method currently
+                 * adding spoils we must undo "pickup" gains
+                 * of gold and potions.
+                 */
+                target.RPGHealingPotions -= combatResult.Spoils.HealthPot;
+                target.RPGStaminaPotions -= combatResult.Spoils.StamPot;
+                target.RPGGold -= combatResult.Spoils.Gold;
+                CheckLevelUp(e);
+            }
+            //Original attacker dies and Beta survives
+            else if (!combatResult.TargetDead && betaResult.TargetDead)
+            {
+                await
+                    e.Channel.SendMessage(
+                        String.Format(
+                            "I sure taught {0} a lesson! I earned {1} XP and was able to loot {2} gold from the corpse!", target.UserName, betaResult.Spoils.XP, betaResult.Spoils.Gold));
+                target.CheckLevelUp(e);
+            }
+            //Beta dies and original attacker survives
+            else if (combatResult.TargetDead && !betaResult.TargetDead)
+            {
+                int num = r.Next(1, 3);
+                await
+                    e.Channel.SendMessage(
+                        string.Format(
+                            "{0} has taken me down! They gained {1} XP and found {2} gold on my corpse! Don't get too cocky, I'll be back.",
+                            target.UserName, combatResult.Spoils.XP, combatResult.Spoils.Gold));
+                target.CheckLevelUp(e);
+                if (combatResult.Spoils.HealthPot > 0 || combatResult.Spoils.StamPot > 0)
+                {
+                    await
+                        e.Channel.SendMessage(
+                            string.Format("Oh! Looks like you also got {0} Healing Potions and {1} Stamina Potions",
+                                combatResult.Spoils.HealthPot, combatResult.Spoils.StamPot));
+                    ;
+                }
+
+            }
+
+        }
+
+        public async void DefendBot(UserState target, UserState attacker, CommandEventArgs e, Result combatResult)
+        {
+            Result betaResult = Attack(target, e, combatResult);
+            await
+                                        e.Channel.SendMessage(
+                                            String.Format(
+                                                "Sensing my fellow bot is in danger I leap into action, stricking back with my trusty {0} {1} of {2} for {3} points of damage!",
+                                                ChatBattleModule.WeaponPrefixList.GetRandom(), ChatBattleModule.WeaponList.GetRandom(),
+                                                ChatBattleModule.WeaponSuffixList.GetRandom(), betaResult.Damage));
+            //Both targets have died
+            if (combatResult.TargetDead && betaResult.TargetDead)
+            {
+                await
+                    e.Channel.SendMessage(
+                        String.Format(
+                            "I levied a counter attack, felling {0}. However I was too late, {1} died shortly thereafter. I shall miss you, old friend...",
+                            attacker.UserName, target.UserName));
+                await
+                    e.Channel.SendMessage(String.Format("I gained {0} XP! {1} gained {2} XP!",
+                        betaResult.Spoils.XP, attacker.UserName, combatResult.Spoils.XP));
+                attacker.RPGXP += combatResult.Spoils.XP;
+                attacker.CheckLevelUp(e);
+                /* Due to the ScoreKill method currently
+                 * adding spoils we must undo "pickup" gains
+                 * of gold and potions.
+                 */
+                attacker.RPGHealingPotions -= combatResult.Spoils.HealthPot;
+                attacker.RPGStaminaPotions -= combatResult.Spoils.StamPot;
+                attacker.RPGGold -= combatResult.Spoils.Gold;
+
+                RPGXP += betaResult.Spoils.XP;
+                CheckLevelUp(e);
+            }
+            //Original attacker dies and R2 survives
+            else if (!combatResult.TargetDead && betaResult.TargetDead)
+            {
+                await
+                    e.Channel.SendMessage(
+                        String.Format(
+                            "I sure taught {0} a lesson! Leave those poor defenseless bots alone! I earned {1} XP and was able to loot {2} gold from the corpse!",
+                            attacker.UserName, betaResult.Spoils.XP, betaResult.Spoils.Gold));
+                target.RPGXP += betaResult.Spoils.XP;
+                target.RPGGold += betaResult.Spoils.Gold;
+                target.CheckLevelUp(e);
+            }
+            //Beta dies and original attacker survives
+            else if (combatResult.TargetDead && !betaResult.TargetDead)
+            {
+                int num = r.Next(1, 3);
+                await
+                    e.Channel.SendMessage(
+                        String.Format(
+                            "{0} has taken {4} down, and I was unable to put a stop to them! They gained {1} XP and found {2} gold on R2's corpse! Don't get too cocky, I'll get you next time...",
+                            attacker.UserName, combatResult.Spoils.XP, combatResult.Spoils.Gold, target.UserName));
+                attacker.RPGXP += combatResult.Spoils.XP;
+                attacker.RPGGold += combatResult.Spoils.Gold;
+                attacker.CheckLevelUp(e);
+                
+            }
+        }
+
+        public override Spoils CalculateSpoils(UserState attacker)
+        {
+            int xp = 3;
+            int healthPot = 0;
+            var stamPot = 0;
+            var gold = attacker.RPGLevel * r.Next(50, 100);            
+            if (r.Next(1000) == 3) stamPot++;
+            if (r.Next(1000) == 7) healthPot++;
+            if (r.Next(1000) == 10)
+            {
+                stamPot++;
+                healthPot++;
+            }
+            return new Spoils(gold, xp, healthPot, stamPot);
+        }
+
     }
 
     public class R2UserState : NPCUserState
@@ -243,6 +467,7 @@ namespace Beta.Repository
 
     public class UserState
     {
+        #region Attributes
         [XmlAttribute] public static int BanditGold = 14;
 
         [XmlIgnore] private readonly Random r = new Random();
@@ -294,6 +519,7 @@ namespace Beta.Repository
 
         [XmlAttribute]
         public bool Alive { get; set; } = true;
+#endregion
 
         public void CheckLevelUp(CommandEventArgs e)
         {
@@ -354,7 +580,7 @@ namespace Beta.Repository
 
         }
 
-        public Spoils CalculateSpoils(UserState attacker)
+        public virtual Spoils CalculateSpoils(UserState attacker)
         {
             int xp = 1;
             int healthPot = 0;
@@ -368,11 +594,6 @@ namespace Beta.Repository
             {
                 stamPot++;
                 healthPot++;
-            }
-            if (attacker.UserName == "Beta")
-            {
-                gold = CalculateBetaGold(this);
-                xp = CalculateBetaXP(this);
             }
             return new Spoils(gold,xp,healthPot,stamPot);
         }

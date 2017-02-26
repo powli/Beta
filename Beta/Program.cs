@@ -145,7 +145,9 @@ namespace Beta
             _client.MessageReceived += (s, e) =>
             {
                 if (!e.Message.Channel.IsPrivate)ChannelStateRepository.AddChannel(e.Channel, e.Server);
-                UserStateRepository.AddUser(e.User);
+
+                if (e.User.IsBot) UserStateRepository.AddUser(e.User.Name,"bot");
+                else UserStateRepository.AddUser(e.User);
 
                 if (!e.Channel.IsPrivate) LogToFile(e.Server, e.Channel, e.User, e.Message.Text);
 
@@ -259,13 +261,28 @@ namespace Beta
                 MarkovChainRepository = new MultiDeepMarkovChain(3);
                 TrumpMarkovChain = new MultiDeepMarkovChain(3);
                 HillaryMarkovChain = new MultiDeepMarkovChain(3);
+                UserStateRepository.AddUser("Beta","beta");
                 Servers = _client.Servers.ToList();
                 BuildUserList();
                 System.Timers.Timer BetaUpdateTimer = new System.Timers.Timer(60 * 1000.00);
                 BetaUpdateTimer.AutoReset = true;
                 BetaUpdateTimer.Elapsed += (sender, e) =>
-                {                    
+                {
+                    bool runCheckResult = false;
                     BetaUpdateTick();
+                    foreach (NPCUserState npc in UserStateRepository.NPCUserStates)
+                    {
+                        if (npc.CanRun) runCheckResult = npc.RunAwayCheck();
+                        if (runCheckResult)
+                        {
+                            npc.RunAway();
+                            UserStateRepository.NPCUserStates.Remove(npc);
+                        }                        
+                    }
+                    if (UserStateRepository.NPCUserStates.Count < 12)
+                    {
+                        UserStateRepository.SpawnNPCs();
+                    }
                 };
                 BetaUpdateTimer.Start();
                 System.Timers.Timer BetaAsyncUpdateTimer = new System.Timers.Timer(3 * 1000);
