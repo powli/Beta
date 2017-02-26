@@ -529,7 +529,7 @@ namespace Beta.Modules
                                         await
                                             e.Channel.SendMessage(
                                                 String.Format(
-                                                    "{0} struck back with the {1}{2} of {3} for {4} points of damage!",target.UserName,WeaponPrefixList.GetRandom(),WeaponList.GetRandom(),WeaponSuffixList.GetRandom()));
+                                                    "{0} struck back with the {1}{2} of {3} for {4} points of damage!",target.UserName,WeaponPrefixList.GetRandom(),WeaponList.GetRandom(),WeaponSuffixList.GetRandom(),npcResult.Damage));
 
                                         //Both died
                                         if (npcResult.TargetDead && combatResult.TargetDead)
@@ -538,7 +538,7 @@ namespace Beta.Modules
                                                 e.Channel.SendMessage(
                                                     String.Format(
                                                         "{0} and {1} managed to kill each other! {0} gained {2} XP and {1} gained {3} XP",
-                                                        target, attacker, npcResult.Spoils.XP, combatResult.Spoils.XP));
+                                                        target.UserName, attacker.UserName, npcResult.Spoils.XP, combatResult.Spoils.XP));
                                             Beta.UserStateRepository.NPCUserStates.Remove((NPCUserState)target);
                                         }
                                         //NPC died, player survived
