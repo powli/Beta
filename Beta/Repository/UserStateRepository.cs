@@ -116,8 +116,8 @@ namespace Beta.Repository
         {
             foreach (UserState usr in UserStates)
             {
-                if (usr.RPGStamina < usr.RPGMaxStamina) usr.RPGStamina++;
-                if (usr.RPGHitpoints < usr.RPGMaxHP && usr.Alive) usr.RPGHitpoints++;
+                if (usr.RPGStamina < usr.RPGMaxStamina) usr.RPGStamina += (int)usr.RPGLevel / 2;
+                if (usr.RPGHitpoints < usr.RPGMaxHP && usr.Alive) usr.RPGHitpoints += (int)usr.RPGLevel/2;
                 if (usr.RPGHitpoints <= 0)
                 {
                     usr.Alive = false;
