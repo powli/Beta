@@ -15,6 +15,8 @@ namespace Beta.Repository
     {
         public const string _Filename = "UserStates.xml";
 
+        
+
         [XmlIgnore] public static List<string> NPCNames = new List<string>()
         {
             "Storm Trooper",
@@ -256,13 +258,16 @@ namespace Beta.Repository
             while (spawnNumber > 0 || NPCUserStates.Count <= 12)
             {
                 AddUser(NPCNames.GetRandom(),"npc");
+                spawnNumber--;
             }
         }
     }
 
     public class NPCUserState : UserState
     {
+
         private Random r = new Random();
+
         [XmlAttribute] public bool IsImmortal;
         [XmlAttribute] public bool CanRun;
         [XmlAttribute] public bool RanAway;
@@ -272,6 +277,11 @@ namespace Beta.Repository
             if (CanRun) return r.Next(1, 20) == 1;
             return false;
 
+        }
+
+        public override bool IsBot()
+        {
+            return true;
         }
 
         public void RunAway()
@@ -520,6 +530,11 @@ namespace Beta.Repository
         [XmlAttribute]
         public bool Alive { get; set; } = true;
 #endregion
+
+        public virtual bool IsBot()
+        {
+            return false;
+        }
 
         public void CheckLevelUp(CommandEventArgs e)
         {
