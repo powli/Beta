@@ -239,12 +239,21 @@ namespace Beta.Repository
 
         public Spoils ScoreKill(UserState enemy, CommandEventArgs e)
         {
+            int healthPot = 0;
+            int stamPot = 0;
             int xp = 1;
             int gold = (enemy.RPGLevel)*r.Next(1, 25);
             if (enemy.RPGLevel > RPGLevel) xp = 1 + enemy.RPGLevel - RPGLevel;
             else if (enemy.RPGLevel - RPGLevel < -3) xp = 0;
             RPGWins++;
-            return new Spoils(gold,xp);
+            if (r.Next(1000) == 3) stamPot++;
+            if (r.Next(1000) == 7) healthPot++;
+            if (r.Next(1000) == 10)
+            {
+                stamPot++;
+                healthPot++;
+            }
+            return new Spoils(gold,xp,healthPot,stamPot);
         }
 
         public void Die()
@@ -286,11 +295,16 @@ namespace Beta.Repository
     {
         public int Gold;
         public int XP;
+        public int HealthPot;
+        public int StamPot;
 
-        public Spoils(int gold, int xp)
+
+        public Spoils(int gold, int xp, int health, int stam)
         {
             Gold = gold;
             XP = xp;
+            HealthPot = health;
+            StamPot = stam;
         }
     }
 }
