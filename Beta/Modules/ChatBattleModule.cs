@@ -328,7 +328,6 @@ namespace Beta.Modules
             {
                 Spoils spoils = attacker.ScoreKill(target, e);
                 target.Die();
-                if (target.UserName == "Beta") spoils.XP = CalculateBetaXP(attacker);
                 return new Result(true, dmg, spoils);
             }
             else
@@ -337,15 +336,6 @@ namespace Beta.Modules
             }
         }
 
-        public int CalculateBetaXP(UserState attacker)
-        {
-            return 3;
-        }
-
-        public int CalculateBetaGold(UserState attacker)
-        {
-            return 
-        }
         public override void Install(ModuleManager manager)
         {
             _manager = manager;

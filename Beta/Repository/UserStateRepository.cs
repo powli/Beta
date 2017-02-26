@@ -214,6 +214,11 @@ namespace Beta.Repository
     {
     }
 
+    public class R2UserState : NPCUserState
+    {
+        
+    }
+
     public class UserState
     {
         [XmlAttribute] public static int BanditGold = 14;
@@ -325,10 +330,31 @@ namespace Beta.Repository
                 stamPot++;
                 healthPot++;
             }
+            if (target.UserName == "Beta")
+            {
+                gold = CalculateBetaGold(this);
+                xp = CalculateBetaXP(this);
+            }
 
             return new Spoils(gold, xp, healthPot, stamPot);
         }
 
+        private int CalculateBetaGold(UserState attacker)
+        {
+            return r.Next(50, 100)*attacker.RPGLevel;
+        }
+
+        private int CalculateBetaXP(UserState attacker)
+        {
+            return 3;
+        }
+
+        //* Plan is to eventually change the Spoils generation from "Score Kill" to "Die" to allow bots to have their own unique generation
+        
+
+
+
+                                                                
         public void Die()
         {
             RPGLosses++;
