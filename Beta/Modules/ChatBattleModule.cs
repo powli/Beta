@@ -7,6 +7,7 @@ using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Beta.Repository;
+using RestSharp.Validation;
 
 namespace Beta.Modules
 {
@@ -463,14 +464,9 @@ namespace Beta.Modules
                     int damage = (int)(stamCost * r.Next(4, 50));
                     if (Beta.CheckModuleState(e, "battle", e.Channel.IsPrivate) && attacker.Alive)
                     {                                                    
-                        if (e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target")) != null)
+                        if (ValidChatBattleTarget(e))
                         {
-                            User usr = e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target"));
-                            if (Beta.UserStateRepository.VerifyUsersExists(usr.Id))
-                            {
-                                target = Beta.UserStateRepository.GetUserState(usr.Id);
-                                if (target.RPGHitpoints == -1) target.RPGHitpoints = target.RPGMaxHP;
-                            }                            
+                            target = GetTargetUserState(e);
                         }                        
                         if (target != null && attacker.RPGStamina >= stamCost)
                         {                            
@@ -767,6 +763,26 @@ namespace Beta.Modules
                     await e.User.SendMessage(String.Format(RPGInv, usr.RPGHealingPotions, usr.RPGStaminaPotions));
                 });
             });
+        }
+
+        public bool ValidChatBattleTarget(CommandEventArgs e)
+        {
+            return e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target")) != null;
+
+                
+            
+        }
+
+        public UserState GetTargetUserState(CommandEventArgs e)
+        {
+            User usr = e.Channel.Users.FirstOrDefault(u => u.Name == e.GetArg("target"));
+            if (Beta.UserStateRepository.VerifyUsersExists(usr.Id))
+            {
+                var target = Beta.UserStateRepository.GetUserState(usr.Id);
+                if (target.RPGHitpoints == -1) target.RPGHitpoints = target.RPGMaxHP;
+                return target;
+            }
+            return null;
         }
     }
 }
