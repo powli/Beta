@@ -454,7 +454,6 @@ namespace Beta.Modules
                     UserState attacker = Beta.UserStateRepository.GetUserState(e.User.Id);
                     UserState target = null;
                     UserState beta = Beta.UserStateRepository.UserStates.FirstOrDefault(us => us.UserName == "Beta");
-                    bool spoilsDelievered = false;
                     if (attacker == null)
                     {
                         Beta.UserStateRepository.AddUser(e.User);
@@ -492,6 +491,9 @@ namespace Beta.Modules
                                         String.Format("{0} attacked {1} with the {2} {3} of {4} for {5} points of damage! You drew blood!",
                                         e.User.Name, e.GetArg("target"), WeaponPrefixList.GetRandom(), WeaponList.GetRandom(),
                                         WeaponSuffixList.GetRandom(), combatResult.Damage));
+
+                                #region Handle R2-D2 being attacked
+
                                 if (target.UserName == "R2-D2")
                                 {
 
@@ -563,6 +565,10 @@ namespace Beta.Modules
                                     }
 
                                 }
+
+#endregion
+
+                                #region Beta Counterattack Logic
                                 else if (target.UserName == "Beta")
                                 {
                                     betaResult = HandleChatCombat(target, attacker, e);
@@ -629,8 +635,11 @@ namespace Beta.Modules
                                         }
 
                                     }
-                                }                                
-                                else if (target.UserId != attacker.UserId && !spoilsDelievered)
+                                }
+                                #endregion
+
+                                #region Target Death Result
+                                else if (target.UserId != attacker.UserId)
                                 {
                                     if (combatResult.TargetDead)
                                     {
@@ -642,8 +651,18 @@ namespace Beta.Modules
                                         attacker.RPGGold += combatResult.Spoils.Gold;
                                         attacker.RPGXP += combatResult.Spoils.XP;
                                         attacker.CheckLevelUp(e);
+                                        if (combatResult.Spoils.HealthPot > 0 || combatResult.Spoils.StamPot > 0)
+                                        {
+                                            await e.Channel.SendMessage(String.Format("Looks like you also managed to find some potions! Gained {0} Health Potions and {1} Stamina Potions.",combatResult.Spoils.HealthPot,combatResult.Spoils.StamPot));
+                                            attacker.RPGHealingPotions += combatResult.Spoils.HealthPot;
+                                            attacker.RPGStaminaPotions += combatResult.Spoils.StamPot;
+                                        }
                                     }
-                                }                             
+                                }
+                                #endregion
+
+                                #region Player Attacked Themselves
+
                                 else if (target.UserId == attacker.UserId)
                                 {
                                     await e.Channel.SendMessage(
@@ -672,7 +691,8 @@ namespace Beta.Modules
                                         }
                                         else target.RPGXP -= target.RPGLevel*3;
                                     }
-                                }                                
+                                }
+#endregion                                
                             }
                         }
                         else
