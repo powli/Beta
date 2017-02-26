@@ -340,8 +340,12 @@ namespace Beta.Modules
         public int CalculateBetaXP(UserState attacker)
         {
             return 3;
-        }        
+        }
 
+        public int CalculateBetaGold(UserState attacker)
+        {
+            return 
+        }
         public override void Install(ModuleManager manager)
         {
             _manager = manager;
