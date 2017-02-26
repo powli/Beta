@@ -610,7 +610,7 @@ namespace Beta.Modules
                                         attacker.RPGXP += combatResult.Spoils.XP;
                                         attacker.RPGGold += combatResult.Spoils.Gold;
                                         attacker.CheckLevelUp(e);
-                                        if (r.Next(1, 1000) == 7)
+                                        if (r.Next(1, 100) == 7)
                                         {
                                             
                                             await e.Channel.SendMessage(
@@ -620,7 +620,7 @@ namespace Beta.Modules
                                             attacker.RPGHealingPotions += num;
                                             num = r.Next(1, 3);
                                         }
-                                        else if (r.Next(1, 1000) == 3)
+                                        else if (r.Next(1, 100) == 3)
                                         {
                                            await e.Channel.SendMessage(
                                                 String.Format(
