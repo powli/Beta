@@ -473,7 +473,7 @@ namespace Beta.Modules
                                 if (target.RPGHitpoints == -1) target.RPGHitpoints = target.RPGMaxHP;
                             }                            
                         }                        
-                        if (target != null && attacker.RPGStamina > stamCost)
+                        if (target != null && attacker.RPGStamina >= stamCost)
                         {                            
                             attacker.RPGStamina -= stamCost;
                             if (attacker.RPGStamina < stamCost) e.User.SendMessage("You feel exhausted...");
