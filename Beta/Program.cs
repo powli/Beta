@@ -445,7 +445,7 @@ namespace Beta
             var commits = Git.Repository.Commit.GetAll("OtherwiseJunk", "Beta").Result;            
             DateTime lastKnownCommitTime =
                 commits.FirstOrDefault(gc => gc.Sha == Config.LastGithubCommit).Commit.Committer.Date.DateTime;            
-            foreach (GitHubCommit commit in commits)
+            foreach (GitHubCommit commit in commits.Reverse())
             {
                 if (commit.Commit.Committer.Date.DateTime.ToLocalTime() > lastKnownCommitTime.ToLocalTime())
                 {
