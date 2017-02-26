@@ -116,13 +116,15 @@ namespace Beta.Repository
         {
             foreach (UserState usr in UserStates)
             {
-                if (usr.RPGStamina < usr.RPGMaxStamina) usr.RPGStamina += (int)usr.RPGLevel / 2;
-                if (usr.RPGHitpoints < usr.RPGMaxHP && usr.Alive) usr.RPGHitpoints += (int)usr.RPGLevel/2;
+                if (usr.RPGStamina < usr.RPGMaxStamina) usr.RPGStamina += usr.RPGLevel / 2;
+                if (usr.RPGHitpoints < usr.RPGMaxHP && usr.Alive) usr.RPGHitpoints += usr.RPGLevel/2;
                 if (usr.RPGHitpoints <= 0)
                 {
                     usr.Alive = false;
                     usr.RPGHitpoints = 0;
                 }
+                if (usr.RPGHitpoints > usr.RPGMaxHP) usr.RPGHitpoints = usr.RPGMaxHP;
+                if (usr.RPGStamina > usr.RPGMaxStamina) usr.RPGStamina = usr.RPGMaxStamina;
                 try
                 {
                     usr.CheckLevelUp(beta.GetUser(usr.UserId));
@@ -133,6 +135,7 @@ namespace Beta.Repository
                     Console.WriteLine("[UserStateRepository] Error Message:"+ex.Message);
                     Console.WriteLine("[UserStateRepository] User ID: " + usr.UserId+" Username: "+usr.UserName);
                 }
+                
                 
             }
             Save();
