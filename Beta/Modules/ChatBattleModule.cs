@@ -328,12 +328,18 @@ namespace Beta.Modules
             {
                 Spoils spoils = attacker.ScoreKill(target, e);
                 target.Die();
+                if (target.UserName == "Beta") spoils.XP = CalculateBetaXP(attacker);
                 return new Result(true, dmg, spoils);
             }
             else
             {
                 return new Result(false, dmg);
             }
+        }
+
+        public int CalculateBetaXP(UserState attacker)
+        {
+            return 3;
         }        
 
         public override void Install(ModuleManager manager)
@@ -571,7 +577,6 @@ namespace Beta.Modules
                                 #region Beta Counterattack Logic
                                 else if (target.UserName == "Beta")
                                 {
-                                    int betaXP = 3;
                                     betaResult = HandleChatCombat(target, attacker, e);
                                     await
                                         e.Channel.SendMessage(
@@ -589,8 +594,8 @@ namespace Beta.Modules
                                                     "I levied a counter attack, felling {0}. However I was fatal wounded, and died shortly thereafter. I shall return...",attacker.UserName));
                                         await
                                             e.Channel.SendMessage(String.Format("I gained {0} XP! {1} gained {2} XP!",
-                                                betaResult.Spoils.XP, attacker.UserName, betaXP));
-                                        attacker.RPGXP += betaXP;
+                                                betaResult.Spoils.XP, attacker.UserName, combatResult.Spoils.XP));
+                                        attacker.RPGXP += combatResult.Spoils.XP;
                                         attacker.CheckLevelUp(e);
                                         target.RPGXP += betaResult.Spoils.XP;
                                         target.CheckLevelUp(e);
@@ -614,8 +619,8 @@ namespace Beta.Modules
                                             e.Channel.SendMessage(
                                                 String.Format(
                                                     "{0} has taken me down! They gained {1} XP and found {2} gold on my corpse! Don't get too cocky, I'll be back.",
-                                                    attacker.UserName, betaXP, combatResult.Spoils.Gold));
-                                        attacker.RPGXP += betaXP;
+                                                    attacker.UserName, combatResult.Spoils.XP, combatResult.Spoils.Gold));
+                                        attacker.RPGXP += combatResult.Spoils.XP;
                                         attacker.RPGGold += combatResult.Spoils.Gold;
                                         attacker.CheckLevelUp(e);
                                         if (r.Next(1, 100) == 7)
