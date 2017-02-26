@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Discord;
 using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
@@ -432,8 +433,12 @@ namespace Beta.Modules
                             String.Format(
                                 "As {0}'s body floats throw space they slowly begin to lose consciousness...", pusher.UserName));
                         await e.Channel.SendMessage(
-                            String.Format("{0} managed to get themselves killed in the cold vaccum of space.", pusher.UserName));
-                        pusher.Die();
+                            String.Format("{0} managed to get themselves lost in the cold vacuum of space...", pusher.UserName));
+                        Thread.Sleep(1500);
+                        await
+                            e.Channel.SendMessage(
+                                "A robotic hand closes on {0}'s wrist and drags them back in. They feel exhausted, but they'll live.");
+                        pusher.RPGStamina = 0;
                     }
                 });
 
