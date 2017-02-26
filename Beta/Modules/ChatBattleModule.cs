@@ -13,7 +13,7 @@ namespace Beta.Modules
     {
         public bool TargetDead;
         public int Damage;
-        public XPandGold Spoils;
+        public Spoils Spoils;
 
         public Result(bool dead, int dmg)
         {
@@ -21,7 +21,7 @@ namespace Beta.Modules
             Damage = dmg;
         }
 
-        public Result(bool dead, int dmg, XPandGold spoils)
+        public Result(bool dead, int dmg, Spoils spoils)
         {
             TargetDead = dead;
             Damage = dmg;
@@ -325,7 +325,7 @@ namespace Beta.Modules
             target.RPGHitpoints -= dmg;
             if (target.RPGHitpoints <= 0)
             {
-                XPandGold spoils = attacker.ScoreKill(target, e);
+                Spoils spoils = attacker.ScoreKill(target, e);
                 target.Die();
                 return new Result(true, dmg, spoils);
             }

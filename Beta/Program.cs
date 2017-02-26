@@ -447,7 +447,7 @@ namespace Beta
                 commits.FirstOrDefault(gc => gc.Sha == Config.LastGithubCommit).Commit.Committer.Date.DateTime;            
             foreach (GitHubCommit commit in commits)
             {
-                if (commit.Commit.Committer.Date > lastKnownCommitTime)
+                if (commit.Commit.Committer.Date.DateTime.ToLocalTime() > lastKnownCommitTime.ToLocalTime())
                 {
                     Console.WriteLine("[Beta] Got a hit!");
                     AnnounceCommitMessage(commit);

@@ -178,7 +178,7 @@ namespace Beta.Repository
         public int RPGLosses { get; set; }
 
         [XmlAttribute]
-        public int RPGStamina { get; set; } = 3;
+        public double RPGStamina { get; set; } = 3;
 
         [XmlAttribute]    
         public int RPGMaxStamina { get; set; } = 3;
@@ -230,14 +230,14 @@ namespace Beta.Repository
             };
         }
 
-        public XPandGold ScoreKill(UserState enemy, CommandEventArgs e)
+        public Spoils ScoreKill(UserState enemy, CommandEventArgs e)
         {
             int xp = 1;
             int gold = (enemy.RPGLevel)*r.Next(1, 25);
             if (enemy.RPGLevel > RPGLevel) xp = 1 + enemy.RPGLevel - RPGLevel;
             else if (enemy.RPGLevel - RPGLevel < -3) xp = 0;
             RPGWins++;
-            return new XPandGold(gold,xp);
+            return new Spoils(gold,xp);
         }
 
         public void Die()
@@ -275,12 +275,12 @@ namespace Beta.Repository
 
     }
 
-    public struct XPandGold
+    public struct Spoils
     {
         public int Gold;
         public int XP;
 
-        public XPandGold(int gold, int xp)
+        public Spoils(int gold, int xp)
         {
             Gold = gold;
             XP = xp;
