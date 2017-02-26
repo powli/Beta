@@ -453,7 +453,7 @@ namespace Beta.Modules
                         Beta.UserStateRepository.AddUser(e.User);
                         attacker = Beta.UserStateRepository.GetUserState(e.User.Id);
                     }
-                    double stamCost = (attacker.RPGLevel*.25);
+                    decimal stamCost = (decimal)(attacker.RPGLevel*.25);
                     int damage = (int)(stamCost * r.Next(4, 50));
                     if (Beta.CheckModuleState(e, "battle", e.Channel.IsPrivate) && attacker.Alive)
                     {                                                    

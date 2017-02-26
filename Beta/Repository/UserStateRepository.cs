@@ -178,7 +178,7 @@ namespace Beta.Repository
         public int RPGLosses { get; set; }
 
         [XmlAttribute]
-        public double RPGStamina { get; set; } = 3;
+        public decimal RPGStamina { get; set; } = 3;
 
         [XmlAttribute]    
         public int RPGMaxStamina { get; set; } = 3;
