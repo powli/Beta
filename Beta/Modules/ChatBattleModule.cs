@@ -353,6 +353,8 @@ namespace Beta.Modules
                     UserState usr = Beta.UserStateRepository.GetUserState(e.User.Id);
                     if (usr.RPGHitpoints == -1) usr.RPGHitpoints = usr.RPGMaxHP;
                     await e.User.SendMessage(String.Format(RPGStats, usr.RPGLevel, usr.RPGHitpoints, usr.RPGMaxHP, usr.RPGStamina, usr.RPGMaxStamina, usr.RPGGold, usr.RPGXP, usr.RPGWins, usr.RPGLosses) );
+                    Console.WriteLine(String.Format("[Chat Battle] {0} has requested their stats.",usr.UserName));
+                    Console.WriteLine(String.Format("[Chat Battle] "+RPGStats, usr.RPGLevel, usr.RPGHitpoints, usr.RPGMaxHP, usr.RPGStamina, usr.RPGMaxStamina, usr.RPGGold, usr.RPGXP, usr.RPGWins, usr.RPGLosses));
                 });
 
                 cgb.CreateCommand("res")
