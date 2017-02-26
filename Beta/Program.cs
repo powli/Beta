@@ -448,11 +448,9 @@ namespace Beta
             foreach (GitHubCommit commit in commits.Reverse())
             {
                 if (commit.Commit.Committer.Date.DateTime.ToLocalTime() > lastKnownCommitTime.ToLocalTime())
-                {
-                    Console.WriteLine("[Beta] Got a hit!");
+                {                    
                     AnnounceCommitMessage(commit);
-                    Config.LastGithubCommit = commit.Sha;                                        
-                    Console.WriteLine("[Beta] Processed the hit.");
+                    Config.LastGithubCommit = commit.Sha;                                                            
                 }
             }
             Configuration.ConfigHandler.SaveConfig();
