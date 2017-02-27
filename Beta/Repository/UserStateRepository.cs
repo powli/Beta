@@ -601,7 +601,7 @@ namespace Beta.Repository
             int healthPot = 0;
             var stamPot = 0;
             var gold = attacker.RPGLevel * r.Next(1, 25);
-            if (attacker.RPGLevel < RPGLevel) xp = 1 + attacker.RPGLevel - RPGLevel;
+            if (attacker.RPGLevel > RPGLevel) xp = 1 + attacker.RPGLevel - RPGLevel;
             else if (RPGLevel - attacker.RPGLevel < -3) xp = 0;
             if (r.Next(1000) == 3) stamPot++;
             if (r.Next(1000) == 7) healthPot++;
