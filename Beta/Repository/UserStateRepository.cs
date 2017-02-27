@@ -97,7 +97,8 @@ namespace Beta.Repository
             int level = r.Next(1, 10);
             if (!VerifyNPCExists(name))
             {
-                switch (type)
+
+                int hp = (level * (25 + r.Next(1, 25))); switch (type)
                 {
                     case "beta":
                         level = 10;
@@ -118,6 +119,7 @@ namespace Beta.Repository
                         break;
                     case "bot":
                         level = r.Next(7, 10);
+                        
                         NPCUserStates.Add(new NPCUserState()
                         {                            
                             UserName = name,
@@ -126,7 +128,8 @@ namespace Beta.Repository
                             BetaAbusePoints = 0,
                             IsImmortal = true,
                             CanRun = false,
-                            RPGMaxHP = level * (25 + r.Next(1, 25)),
+                            RPGMaxHP = hp,
+                            RPGHitpoints = hp,
                             RPGGold = level * (r.Next(1, 25)),
                             RPGLosses = 0,
                             RPGWins = 0,
@@ -135,6 +138,7 @@ namespace Beta.Repository
                         break;
                     default:
                         level = r.Next(1, 10);
+                        
                         NPCUserStates.Add(new NPCUserState()
                         {
                             UserName = name,
@@ -143,7 +147,8 @@ namespace Beta.Repository
                             BetaAbusePoints = 0,
                             IsImmortal = false,
                             CanRun = true,
-                            RPGMaxHP = level*(25 + r.Next(1, 25)),
+                            RPGMaxHP = hp,
+                            RPGHitpoints = hp,
                             RPGGold = level*(r.Next(1, 25)),                            
                             RPGLosses = 0,
                             RPGWins = 0,
@@ -254,7 +259,7 @@ namespace Beta.Repository
         internal void SpawnNPCs()
         {
             Random r = new Random();
-            int spawnNumber = r.Next(0, 3);
+            int spawnNumber = r.Next(0, 1);
             while (spawnNumber > 0 || NPCUserStates.Count <= 12)
             {
                 AddUser(NPCNames.GetRandom(),"npc");
@@ -287,6 +292,30 @@ namespace Beta.Repository
         public void RunAway()
         {
             RanAway = true;
+        }
+
+        public override Spoils CalculateSpoils(UserState attacker)
+        {
+            int xp = 2;
+            int gold = 100;
+            int health = 0;
+            int stam = 0;
+            if (r.Next(10000) == 3) health++;
+            if (r.Next(10000) == 7) stam++;
+            if (attacker.RPGLevel > RPGLevel + 1)
+            {
+                xp = 0;
+                gold = 1;
+                health = 0;
+                stam = 0;
+            }
+            if (RPGLevel > attacker.RPGLevel)
+            {
+                int diff = RPGLevel - attacker.RPGLevel;
+                xp += diff;
+                gold += diff*50;
+            }
+            return new Spoils(gold,xp,health,stam);
         }
     }
 
@@ -601,7 +630,7 @@ namespace Beta.Repository
             int healthPot = 0;
             var stamPot = 0;
             var gold = attacker.RPGLevel * r.Next(1, 25);
-            if (attacker.RPGLevel > RPGLevel) xp = 1 + attacker.RPGLevel - RPGLevel;
+            if (attacker.RPGLevel < RPGLevel) xp = 1 + RPGLevel - attacker.RPGLevel;
             else if (RPGLevel - attacker.RPGLevel < -3) xp = 0;
             if (r.Next(1000) == 3) stamPot++;
             if (r.Next(1000) == 7) healthPot++;
@@ -663,6 +692,7 @@ namespace Beta.Repository
 
         public Result Attack(UserState target, CommandEventArgs e)
         {
+            if (target.RPGHitpoints == -1) target.RPGHitpoints = target.RPGMaxHP;
             int dmg = (int) ((RPGLevel*.25)*r.Next(4, 50));
             target.RPGHitpoints -= dmg;
             if (target.RPGHitpoints <= 0)
