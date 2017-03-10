@@ -198,6 +198,10 @@ namespace Beta
                     }
                     e.Channel.SendMessage(msg);
                 }
+                else if (e.Message.Text.IndexOf("kappa", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    e.Channel.SendMessage("Get that weak ass Twitch shit out of here, @" + e.User.Name + "! Nerd.");
+                }
                 /*else if (e.Message.Text.IndexOf("hillary", StringComparison.OrdinalIgnoreCase) >= 0 ||
                          e.Message.Text.IndexOf("clinton", StringComparison.OrdinalIgnoreCase) >= 0 &&
                          CheckModuleState(e, "politics", e.Channel.IsPrivate) && !e.User.IsBot)
