@@ -141,6 +141,12 @@ namespace Beta.Repository
         [XmlAttribute]
         public bool ChatBattleEnabled { get; set; } = false;
 
+        [XmlAttribute]
+        public bool ChattyModeEnabled { get; set; } = false;
+
+        [XmlAttribute]
+        public bool MarkovListenerEnabled { get; set; } = false;
+
         public bool BetaCanSpeak { get; set; } = true;
         
 
@@ -191,6 +197,12 @@ namespace Beta.Repository
                 case "battle":
                     ChatBattleEnabled = !ChatBattleEnabled;
                     return ChatBattleEnabled;
+                case "chatty":
+                    ChattyModeEnabled = !ChattyModeEnabled;
+                    return ChattyModeEnabled;
+                case "markov":
+                    MarkovListenerEnabled = !MarkovListenerEnabled;
+                    return MarkovListenerEnabled;
                 default:
                     return false;
             }

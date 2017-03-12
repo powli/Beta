@@ -379,7 +379,7 @@ namespace Beta.Modules
                     if (nuke && pushee != null)
                     {
                         await e.Channel.SendMessage(
-                            String.Format("As {0}'s body floats throw space they slowly begin to lose consciousness...",target));
+                            String.Format("As {0}'s body floats through space they slowly begin to lose consciousness...",target));
                         await e.Channel.SendMessage(String.Format("{0} has slain {1}! FATALITY!",e.User.Name,target));
                         pusher.Die();
                     }
@@ -387,13 +387,13 @@ namespace Beta.Modules
                     {
                         await e.Channel.SendMessage(
                             String.Format(
-                                "As {0}'s body floats throw space they slowly begin to lose consciousness...", pusher.UserName));
+                                "As {0}'s body floats through space they slowly begin to lose consciousness...", pusher.UserName));
                         await e.Channel.SendMessage(
                             String.Format("{0} managed to get themselves lost in the cold vacuum of space...", pusher.UserName));
                         Thread.Sleep(1500);
                         await
                             e.Channel.SendMessage(
-                                "A robotic hand closes on {0}'s wrist and drags them back in. They feel exhausted, but they'll live.");
+                                String.Format("A robotic hand closes on {0}'s wrist and drags them back in. They feel exhausted, but they'll live.",e.User.Name));
                         pusher.RPGStamina = 0;
                     }
                 });

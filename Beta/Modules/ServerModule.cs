@@ -17,7 +17,7 @@ namespace Beta.Modules
         private ModuleManager _manager;
 
         public override string Prefix { get; } = Beta.Config.CommandPrefixes.Standard;
-        public List<string> TogglableCommands = new List<string>() { "ask", "motd", "roll", "quote", "table", "twitter", "comic", "gamertag", "note", "politics", "battle" };
+        public List<string> TogglableCommands = new List<string>() { "ask", "motd", "roll", "quote", "table", "twitter", "comic", "gamertag", "note", "politics", "battle", "chatty", "markov" };
 
         public override void Install(ModuleManager manager)
         {
@@ -281,6 +281,8 @@ namespace Beta.Modules
                             msg += "Twitter  :  " + srvr.TwitterModuleEnabled + "\n";
                             msg += "Politics : " + srvr.PoliticsEnabled + "\n";
                             msg += "Chat Battle : " + srvr.ChatBattleEnabled + "\n";
+                            msg += "Chatty Mode : " + srvr.ChattyModeEnabled + "\n";
+                            msg += "Markov Listener Enabled : " + srvr.MarkovListenerEnabled + "\n";
                             await e.Channel.SendMessage(msg);
                         }                        
                     });
@@ -305,6 +307,8 @@ namespace Beta.Modules
                             msg += "Twitter  :  " + chnl.TwitterModuleEnabled + "\n";
                             msg += "Politics : " + chnl.PoliticsEnabled + "\n";
                             msg += "Chat Battle : " + chnl.ChatBattleEnabled + "\n";
+                            msg += "Chatty Mode : " + chnl.ChattyModeEnabled + "\n";
+                            msg += "Markov Listener Enabled : " + chnl.MarkovListenerEnabled + "\n";
                             await e.Channel.SendMessage(msg);
                         }
                     });

@@ -78,12 +78,14 @@ namespace Beta
         public static MultiDeepMarkovChain MarkovChainRepository { get; private set; }
         public static MultiDeepMarkovChain TrumpMarkovChain { get; private set; }
         public static MultiDeepMarkovChain HillaryMarkovChain { get; private set; }
+        public static MultiDeepMarkovChain FrenchkovChain { get; private set; }
         public static int numpost = 0;
         public List<List<String>> TableFlipResponses { get; private set; }
 
         public void SaveReposToFile()
         {
-            MarkovChainRepository.save("MarkovChainMemory.xml");            
+            MarkovChainRepository.save("MarkovChainMemory.xml");
+            FrenchkovChain.save("FrenchkovChainMemory.xml");            
         }
 
         public List<User> BuildUserList()
@@ -180,7 +182,7 @@ namespace Beta
                     e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
                 }
                 else if (e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0 &&
-                         CheckModuleState(e, "table", e.Channel.IsPrivate) && !e.Message.Text.StartsWith("$") && !e.User.IsBot )
+                         CheckModuleState(e, "chatty", e.Channel.IsPrivate) && !e.Message.Text.StartsWith("$") && !e.User.IsBot )
                 {//Hopefully this will loop until generateSentence() actually returns a value.
                     bool msgNotSet = true;
                     string msg = "";
@@ -188,10 +190,39 @@ namespace Beta
                     {
                         try
                         {
-                            msg = MarkovChainRepository.generateSentence();
-                            msgNotSet = false;
+                            //Check For French server
+                            if (e.Server.Id == 178929081943851008)
+                            {
+                                msg = FrenchkovChain.generateSentence();
+                                msgNotSet = false;
+                            }
+                            else
+                            {
+                                msg = MarkovChainRepository.generateSentence();
+                                msgNotSet = false;
+                            }
                         }
                         catch(Exception ex)
+                        {
+                            Console.WriteLine("Failed to generate a sentence, trying again...");
+                        }
+                    }
+                    e.Channel.SendMessage(msg);
+                }
+                else if (e.Message.Text.IndexOf("hon", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                         CheckModuleState(e, "chatty", e.Channel.IsPrivate) && !e.Message.Text.StartsWith("$") &&
+                         !e.User.IsBot)
+                {
+                    bool msgNotSet = true;
+                    string msg = "";
+                    while (msgNotSet)
+                    {
+                        try
+                        {
+                                msg = FrenchkovChain.generateSentence();
+                                msgNotSet = false;
+                        }
+                        catch (Exception ex)
                         {
                             Console.WriteLine("Failed to generate a sentence, trying again...");
                         }
@@ -227,9 +258,18 @@ namespace Beta
                         Console.WriteLine("[HIGH PRIORITY ALERT] Reminding Donald Trump he is a loser failed.");
                     }*//*
                 }*/
-                if (!e.User.IsBot && !(e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0) && !e.Message.Text.StartsWith("$") && e.Channel.Id != 94474640193236992 && e.Channel.Id != 183351398501449728)
+                if (!e.User.IsBot && !(e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0) && !e.Message.Text.StartsWith("$") && CheckModuleState(e, "markov",e.Channel.IsPrivate))
                 {
-                    MarkovChainRepository.feed(e.Message.Text);                    
+                    //Check for French server
+                    if (e.Server.Id == 178929081943851008)
+                    {
+                        FrenchkovChain.feed(e.Message.Text);
+                    }
+                    else
+                    {
+                        MarkovChainRepository.feed(e.Message.Text);
+                    }
+                    
                 }
             };
 
@@ -550,6 +590,10 @@ namespace Beta
                     return (srvr.PoliticsEnabled || chnl.PoliticsEnabled);
                 case "battle":
                     return (srvr.ChatBattleEnabled || chnl.ChatBattleEnabled);
+                case "chatty":
+                    return (srvr.ChattyModeEnabled || chnl.ChattyModeEnabled);
+                case "markov":
+                    return (srvr.MarkovListenerEnabled || chnl.MarkovListenerEnabled);
                 default:
                     return false;
             }
@@ -614,6 +658,10 @@ namespace Beta
                     return (srvr.PoliticsEnabled || chnl.PoliticsEnabled);
                 case "battle":
                     return (srvr.ChatBattleEnabled || chnl.ChatBattleEnabled);
+                case "chatty":
+                    return (srvr.ChattyModeEnabled || chnl.ChattyModeEnabled);
+                case "markov":
+                    return (srvr.MarkovListenerEnabled || chnl.MarkovListenerEnabled);
                 default:
                     return false;
             }
