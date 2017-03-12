@@ -164,7 +164,7 @@ namespace Beta.Repository
                     return ChatBattleEnabled;
                 case "chatty":
                     ChattyModeEnabled = !ChattyModeEnabled;
-                    return ChatBattleEnabled;
+                    return ChattyModeEnabled;
                 case "markov":
                     MarkovListenerEnabled = !MarkovListenerEnabled;
                     return MarkovListenerEnabled;     
