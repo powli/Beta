@@ -186,8 +186,10 @@ namespace Beta
                 {//Hopefully this will loop until generateSentence() actually returns a value.
                     bool msgNotSet = true;
                     string msg = "";
+                    int rerollAttempts = 0;
                     while (msgNotSet)
                     {
+                        rerollAttempts++;
                         try
                         {
                             //Check For French server
@@ -195,16 +197,30 @@ namespace Beta
                             {
                                 msg = FrenchkovChain.generateSentence();
                                 msgNotSet = false;
+                                
                             }
                             else
                             {
                                 msg = MarkovChainRepository.generateSentence();
                                 msgNotSet = false;
                             }
+                           
                         }
                         catch(Exception ex)
                         {
                             Console.WriteLine("Failed to generate a sentence, trying again...");
+                        }
+                        if (rerollAttempts > 10 && msgNotSet)
+                        {
+                            if (e.Server.Id == 178929081943851008)
+                            {
+                                msg = "Je suis désolé, on dirait que j'ai été incapable de générer une phrase.";
+                            }
+                            else
+                            {
+                                msg = "I'm sorry, it looks like I'm unable to generate a sentence at this time.";
+                            }
+                            msgNotSet = false;
                         }
                     }
                     e.Channel.SendMessage(msg);
@@ -215,8 +231,10 @@ namespace Beta
                 {
                     bool msgNotSet = true;
                     string msg = "";
+                    int rerollAttempts = 0;
                     while (msgNotSet)
                     {
+                        rerollAttempts++;
                         try
                         {
                                 msg = FrenchkovChain.generateSentence();
@@ -225,6 +243,11 @@ namespace Beta
                         catch (Exception ex)
                         {
                             Console.WriteLine("Failed to generate a sentence, trying again...");
+                        }
+                        if (rerollAttempts > 10)
+                        {
+                            msg = "Je suis désolé, on dirait que j'ai été incapable de générer une phrase.";
+                            msgNotSet = false;
                         }
                     }
                     e.Channel.SendMessage(msg);
