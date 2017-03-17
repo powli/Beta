@@ -566,7 +566,7 @@ namespace Beta.Repository
         [XmlAttribute]
         public bool Alive { get; set; } = true;
 
-        [XmlAttribute]
+        [XmlArrayItem("KappaViolations")]
         public List<KappaViolation> KappaViolations {get; set;} = new List<KappaViolation>();
 #endregion
 
@@ -575,16 +575,16 @@ namespace Beta.Repository
             KappaViolations.Add(new KappaViolation()
             {
                 VioltionDateTime = DateTime.Now
-            })
+            });
         }
 
         public void EvaluateKappaViolations()
         {
             foreach (KappaViolation violation in KappaViolations)
             {
-                if ((violation.ViolationDateTime.AddHours(24) > DateTime.Now) || (violation.MessageCount > 200))
+                if ((violation.VioltionDateTime.AddHours(24) > DateTime.Now) || (violation.MessageCount > 200))
                 {
-                    KappaViolations.Remote(violation);
+                    KappaViolations.Remove(violation);
                 }
             }
         }

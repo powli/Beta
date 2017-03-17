@@ -50,7 +50,6 @@ namespace Beta
         public const string Username = "$Beta"; //Modify this, and the name will automagically be updated on start-up.
         public static List<Channel> _TwitterAuthorizedChannels { get; set; } = new List<Channel>();
         IUserStream stream = Tweetinvi.Stream.CreateUserStream();
-        public static list<KappaVilation> KappaViolators {get;set;} = new List<KappaViolation>();
 
         private const string AppName = "$Beta"; // Change this to the name of your bot
         public static Configuration Config { get; set; }
@@ -154,7 +153,7 @@ namespace Beta
                 if (e.User.IsBot) UserStateRepository.AddUser(e.User.Name,"bot");
                 else UserStateRepository.AddUser(e.User);
 
-                if (UserStateRepository.GetUserState(e.User.Id).HasKappaViolations)
+                if (UserStateRepository.GetUserState(e.User.Id).HasKappaViolations())
                 {
                     UserStateRepository.IncrementKappaMessageCount(e.User.Id);
                     Cantina.SendMessage(":eggplant: Kappa. "+e.User.Mention);
@@ -362,10 +361,15 @@ namespace Beta
                     }
                     foreach (UserState usr in UserStateRepository.UserStates)
                     {
-                        if (usr.HasKappaViolations)
+                        Random rand = new Random();
+                        if (rand.Next(100) == 7)
                         {
-                            //PM the user ":eggplant: Kappa.";
+                            if (usr.HasKappaViolations())
+                            {
+                                GetUser(usr.UserId).SendMessage(":eggplant: Kappa");                                
+                            }
                         }
+                        
                     }                    
                 };
                 BetaUpdateTimer.Start();
@@ -383,7 +387,10 @@ namespace Beta
                
                 Git = new GitHubClient(new ProductHeaderValue("my-cool-app"));
                 Git.Credentials = new Credentials(Config.GithubAccessToken);
-                
+
+                Cantina = _client.GetChannel(93924120042934272);
+
+
 
 
                 Auth.SetUserCredentials(Config.TwitterConsumerKey, Config.TwitterConsumerSecret, Config.TwitterAccessToken, Config.TwitterAccessSecret);
