@@ -71,6 +71,14 @@ namespace Beta.Repository
             usr.KappaViolations[0].MessageCount++;
         }
 
+        public void EvaluateKappaViolations()
+        {
+            foreach (UserState user in UserStates)
+            {
+                user.EvaluateKappaViolations();
+            }
+        }
+
         public void AddUser(User usr)
         {
             if (!VerifyUsersExists(usr.Id))
@@ -582,7 +590,7 @@ namespace Beta.Repository
         {
             foreach (KappaViolation violation in KappaViolations)
             {
-                if ((violation.VioltionDateTime.AddHours(24) > DateTime.Now) || (violation.MessageCount > 200))
+                if ((violation.VioltionDateTime.AddHours(24) < DateTime.Now) || (violation.MessageCount > 200))
                 {
                     KappaViolations.Remove(violation);
                 }
@@ -738,6 +746,11 @@ namespace Beta.Repository
             {
                 return new Result(false, dmg);
             }
+        }
+
+        public void ClearAllKappas()
+        {
+            KappaViolations = new List<KappaViolation>();
         }
     }
 

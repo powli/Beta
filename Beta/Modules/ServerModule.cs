@@ -211,6 +211,26 @@ namespace Beta.Modules
                         }
                     });
 
+                cgb.CreateCommand("forgive")
+                    .Description(
+                        "Forgives certain violations. Currently recognizes a username (NOT display name) as a parameter.")
+                    .Parameter("User", ParameterType.Required)
+                    .MinPermissions((int)PermissionLevel.ServerAdmin)
+                    .Do(async e =>
+                    {
+                        UserState user = Beta.UserStateRepository.UserStates.FirstOrDefault(us => us.UserName.ToLower() == e.GetArg("User").ToLower());
+                        if (user != null)
+                        {
+                            await e.Channel.SendMessage("You got it boss!");
+                            user.ClearAllKappas();
+                        }
+                        else
+                        {
+                            await e.Channel.SendMessage("Sorry, boss. I don't recognize that meatbag.");
+                        }
+                        
+                    });
+
                 cgb.CreateCommand("stoggle")
                     .Description(
                         "Toogles whether a module is enabled for the entire server. Please use one of the following options: Ask, Comic, Gamertag, MotD, Note, Quote, Roll, Table, Twitter, Politics, Battle")

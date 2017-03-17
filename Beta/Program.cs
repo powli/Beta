@@ -153,13 +153,18 @@ namespace Beta
                 if (e.User.IsBot) UserStateRepository.AddUser(e.User.Name,"bot");
                 else UserStateRepository.AddUser(e.User);
 
-                if (UserStateRepository.GetUserState(e.User.Id).HasKappaViolations())
+                if (!e.User.IsBot && UserStateRepository.GetUserState(e.User.Id).HasKappaViolations())
                 {
-                    UserStateRepository.IncrementKappaMessageCount(e.User.Id);
-                    Cantina.SendMessage(":eggplant: Kappa. "+e.User.Mention);
+                    if (GetPermissions(e.User,e.Channel) >= PermissionLevel.ChannelModerator)
+                    {
+                        UserStateRepository.GetUserState(e.User.Id).ClearAllKappas();
+                    }
+                    else
+                    {
+                        UserStateRepository.IncrementKappaMessageCount(e.User.Id);
+                        Cantina.SendMessage(":eggplant: Kappa. " + e.User.Mention);
+                    }                    
                 }
-
-                if (!e.Channel.IsPrivate) LogToFile(e.Server, e.Channel, e.User, e.Message.Text);
 
                 if (e.Message.IsAuthor)
                     _client.Log.Info("<<Message",
@@ -260,7 +265,7 @@ namespace Beta
                     }
                     e.Channel.SendMessage(msg);
                 }
-                else if (e.Message.Text.IndexOf("kappa", StringComparison.OrdinalIgnoreCase) >= 0 && !e.User.IsBot)
+                else if (Regex.IsMatch(e.Message.Text, @"k.{0,3}a.{0,3}p.{0,3}p.{0,3}a", RegexOptions.IgnoreCase) && !e.User.IsBot)
                 {
                     e.Channel.SendMessage("Get that weak ass Twitch shit out of here, " + e.User.Mention + "! Nerd.");
                     UserStateRepository.GetUserState(e.User.Id).AddKappaViolation();
@@ -344,8 +349,25 @@ namespace Beta
                 BetaUpdateTimer.AutoReset = true;
                 BetaUpdateTimer.Elapsed += (sender, e) =>
                 {
-                    bool runCheckResult = false;
+                    
                     BetaUpdateTick();
+                    
+                };
+                BetaUpdateTimer.Start();
+                System.Timers.Timer ViolationEvaluations = new System.Timers.Timer(60 * 1000.00);
+                ViolationEvaluations.AutoReset = true;
+                ViolationEvaluations.Elapsed += (sender, e) =>
+                {
+
+                    UserStateRepository.EvaluateKappaViolations();
+
+                };
+                ViolationEvaluations.Start();
+                System.Timers.Timer NPCUpdateTimer = new System.Timers.Timer(75 * 1000.00);
+                NPCUpdateTimer.AutoReset = true;
+                NPCUpdateTimer.Elapsed += (sender, e) =>
+                {
+                    bool runCheckResult = false;
                     foreach (NPCUserState npc in UserStateRepository.NPCUserStates)
                     {
                         if (npc.CanRun) runCheckResult = npc.RunAwayCheck();
@@ -353,27 +375,15 @@ namespace Beta
                         {
                             npc.RunAway();
                             UserStateRepository.NPCUserStates.Remove(npc);
-                        }                        
+                        }
                     }
                     if (UserStateRepository.NPCUserStates.Count < 12)
                     {
                         UserStateRepository.SpawnNPCs();
                     }
-                    foreach (UserState usr in UserStateRepository.UserStates)
-                    {
-                        Random rand = new Random();
-                        if (rand.Next(100) == 7)
-                        {
-                            if (usr.HasKappaViolations())
-                            {
-                                GetUser(usr.UserId).SendMessage(":eggplant: Kappa");                                
-                            }
-                        }
-                        
-                    }                    
                 };
-                BetaUpdateTimer.Start();
-                System.Timers.Timer BetaAsyncUpdateTimer = new System.Timers.Timer(3 * 1000);
+                NPCUpdateTimer.Start();
+                System.Timers.Timer BetaAsyncUpdateTimer = new System.Timers.Timer(10 * 1000);
                 BetaAsyncUpdateTimer.AutoReset = true;
                 BetaAsyncUpdateTimer.Elapsed += (sender, e) =>
                 {
@@ -382,6 +392,7 @@ namespace Beta
                         GetChannel(msg.ChannelId).SendMessage(msg.Message);
                         MessageQueue.Remove(msg);
                     }
+                    SaveReposToFile();
                 };
                 BetaAsyncUpdateTimer.Start();
                
@@ -543,9 +554,11 @@ namespace Beta
 
         public void BetaUpdateTick()
         {
-            SaveReposToFile();
+            Console.WriteLine("Entering Update Tick");
             UserStateRepository.UpdateUserStates(this);
+            Console.WriteLine("Supposedly completed userstate update");
             CheckForGithubUpdates();
+            Console.WriteLine("Supposedly finished Github Update");
         }
 
         public void CheckForGithubUpdates()
@@ -721,49 +734,7 @@ namespace Beta
             if (points >= 41) return String.Format(TableFlipResponses[2].GetRandom(), Username);
             if (points >= 21) return String.Format(TableFlipResponses[1].GetRandom(), Username);
             return String.Format(TableFlipResponses[0].GetRandom(), Username);
-        }
-
-        public void LogToFile(Server server, Channel channel, Discord.User usr, string msg)
-        {
-            string ServerDir = Path.Combine(Environment.CurrentDirectory, server.Name);
-            if (server.Name.Contains("Freeworld")) ServerDir = Path.Combine(Environment.CurrentDirectory, "Freeworlds");
-            string FileDir = Path.Combine(ServerDir, "Channels", channel.Name + "Log.txt");
-            Console.WriteLine(FileDir);
-            if (!Directory.Exists(ServerDir))
-            {
-                Directory.CreateDirectory(ServerDir);
-                Directory.CreateDirectory(Path.Combine(ServerDir, "Channels"));
-            }
-            string mesg = string.Format(MsgLog, DateTime.Now, server.Name, channel.Name, usr.Name, usr.Id, msg);
-            if (File.Exists(FileDir))
-            {
-                FileStream fs = null;
-                try
-                {
-                    fs = new FileStream(FileDir, FileMode.Append, FileAccess.Write);
-                    using (StreamWriter writer = new StreamWriter(fs))
-                    {
-                        writer.Write(mesg);
-                    }
-                }
-                finally
-                {
-                }
-            }
-            else
-            {
-                StreamWriter sw = null;
-                try
-                {
-                    sw = File.CreateText(FileDir);
-                    sw.WriteLine(mesg);
-                }
-                finally
-                {
-                    sw.Close();
-                }
-            }
-        }
+        }        
 
         private static PermissionLevel GetPermissions(Discord.User u, Channel c)
         {
