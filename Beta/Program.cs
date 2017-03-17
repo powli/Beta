@@ -41,6 +41,7 @@ namespace Beta
             ChannelId = id;
         }
     }
+
     public class Beta
     {
         public static void Main(string[] args) => new Beta().Start(args);
@@ -49,6 +50,7 @@ namespace Beta
         public const string Username = "$Beta"; //Modify this, and the name will automagically be updated on start-up.
         public static List<Channel> _TwitterAuthorizedChannels { get; set; } = new List<Channel>();
         IUserStream stream = Tweetinvi.Stream.CreateUserStream();
+        public static list<KappaVilation> KappaViolators {get;set;} = new List<KappaViolation>();
 
         private const string AppName = "$Beta"; // Change this to the name of your bot
         public static Configuration Config { get; set; }
@@ -57,7 +59,8 @@ namespace Beta
         public List<Discord.User> Users { get; set; }
         public GitHubClient Git { get; set; }
         public Octokit.Repository BetaRepository { get; set; }       
-        public List<QueuedMessage> MessageQueue { get; set; }         
+        public List<QueuedMessage> MessageQueue { get; set; }
+        public Channel Cantina {get;set;}         
 
         public event EventHandler<QuoteAddedEventArgs> QuoteAdded;
 
@@ -150,6 +153,12 @@ namespace Beta
 
                 if (e.User.IsBot) UserStateRepository.AddUser(e.User.Name,"bot");
                 else UserStateRepository.AddUser(e.User);
+
+                if (UserStateRepository.GetUserState(e.User.Id).HasKappaViolations)
+                {
+                    UserStateRepository.IncrementKappaMessageCount(e.User.Id);
+                    Cantina.SendMessage(":eggplant: Kappa. "+e.User.Mention);
+                }
 
                 if (!e.Channel.IsPrivate) LogToFile(e.Server, e.Channel, e.User, e.Message.Text);
 
@@ -252,9 +261,10 @@ namespace Beta
                     }
                     e.Channel.SendMessage(msg);
                 }
-                else if (e.Message.Text.IndexOf("kappa", StringComparison.OrdinalIgnoreCase) >= 0)
+                else if (e.Message.Text.IndexOf("kappa", StringComparison.OrdinalIgnoreCase) >= 0 && !e.User.IsBot)
                 {
                     e.Channel.SendMessage("Get that weak ass Twitch shit out of here, " + e.User.Mention + "! Nerd.");
+                    UserStateRepository.GetUserState(e.User.Id).AddKappaViolation();
                 }
                 /*else if (e.Message.Text.IndexOf("hillary", StringComparison.OrdinalIgnoreCase) >= 0 ||
                          e.Message.Text.IndexOf("clinton", StringComparison.OrdinalIgnoreCase) >= 0 &&
@@ -350,6 +360,13 @@ namespace Beta
                     {
                         UserStateRepository.SpawnNPCs();
                     }
+                    foreach (UserState usr in UserStateRepository.UserStates)
+                    {
+                        if (usr.HasKappaViolations)
+                        {
+                            //PM the user ":eggplant: Kappa.";
+                        }
+                    }                    
                 };
                 BetaUpdateTimer.Start();
                 System.Timers.Timer BetaAsyncUpdateTimer = new System.Timers.Timer(3 * 1000);

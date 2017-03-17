@@ -65,6 +65,11 @@ namespace Beta.Repository
         [XmlArrayItem("NPCUserState")]
         public List<NPCUserState> NPCUserStates { get; set; }
         
+        public void IncrementKappaMessageCount(ulong id)
+        {
+            UserState usr = GetUserState(id);
+            usr.KappaViolations[0].MessageCount++;
+        }
 
         public void AddUser(User usr)
         {
@@ -481,6 +486,8 @@ namespace Beta.Repository
             }
         }
 
+
+
         public override Spoils CalculateSpoils(UserState attacker)
         {
             int xp = 3;
@@ -558,7 +565,34 @@ namespace Beta.Repository
 
         [XmlAttribute]
         public bool Alive { get; set; } = true;
+
+        [XmlAttribute]
+        public List<KappaViolation> KappaViolations {get; set;} = new List<KappaViolation>();
 #endregion
+
+        public void AddKappaViolation()
+        {
+            KappaViolations.Add(new KappaViolation()
+            {
+                VioltionDateTime = DateTime.Now
+            })
+        }
+
+        public void EvaluateKappaViolations()
+        {
+            foreach (KappaViolation violation in KappaViolations)
+            {
+                if ((violation.ViolationDateTime.AddHours(24) > DateTime.Now) || (violation.MessageCount > 200))
+                {
+                    KappaViolations.Remote(violation);
+                }
+            }
+        }
+        
+        public bool HasKappaViolations()
+        {
+            return KappaViolations.Count > 0;
+        }
 
         public virtual bool IsBot()
         {
@@ -705,6 +739,15 @@ namespace Beta.Repository
                 return new Result(false, dmg);
             }
         }
+    }
+
+    public class KappaViolation
+    {
+        [XmlAttribute]
+        public DateTime VioltionDateTime {get; set;}
+        
+        [XmlAttribute]
+        public int MessageCount = 0;        
     }
 
     public struct Spoils
