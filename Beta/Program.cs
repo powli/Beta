@@ -346,43 +346,15 @@ namespace Beta
                 Servers = _client.Servers.ToList();
                 BuildUserList();
                 System.Timers.Timer BetaUpdateTimer = new System.Timers.Timer(60 * 1000.00);
-                BetaUpdateTimer.AutoReset = true;
+                BetaUpdateTimer.AutoReset = false;
                 BetaUpdateTimer.Elapsed += (sender, e) =>
-                {
-                    
+                {                    
                     BetaUpdateTick();
-                    
-                };
-                BetaUpdateTimer.Start();
-                System.Timers.Timer ViolationEvaluations = new System.Timers.Timer(60 * 1000.00);
-                ViolationEvaluations.AutoReset = true;
-                ViolationEvaluations.Elapsed += (sender, e) =>
-                {
-
                     UserStateRepository.EvaluateKappaViolations();
-
+                    NPCUpdateTick();
+                    BetaUpdateTimer.Start();
                 };
-                ViolationEvaluations.Start();
-                System.Timers.Timer NPCUpdateTimer = new System.Timers.Timer(75 * 1000.00);
-                NPCUpdateTimer.AutoReset = true;
-                NPCUpdateTimer.Elapsed += (sender, e) =>
-                {
-                    bool runCheckResult = false;
-                    foreach (NPCUserState npc in UserStateRepository.NPCUserStates)
-                    {
-                        if (npc.CanRun) runCheckResult = npc.RunAwayCheck();
-                        if (runCheckResult)
-                        {
-                            npc.RunAway();
-                            UserStateRepository.NPCUserStates.Remove(npc);
-                        }
-                    }
-                    if (UserStateRepository.NPCUserStates.Count < 12)
-                    {
-                        UserStateRepository.SpawnNPCs();
-                    }
-                };
-                NPCUpdateTimer.Start();
+                BetaUpdateTimer.Start();                
                 System.Timers.Timer BetaAsyncUpdateTimer = new System.Timers.Timer(10 * 1000);
                 BetaAsyncUpdateTimer.AutoReset = true;
                 BetaAsyncUpdateTimer.Elapsed += (sender, e) =>
@@ -554,11 +526,26 @@ namespace Beta
 
         public void BetaUpdateTick()
         {
-            Console.WriteLine("Entering Update Tick");
             UserStateRepository.UpdateUserStates(this);
-            Console.WriteLine("Supposedly completed userstate update");
             CheckForGithubUpdates();
-            Console.WriteLine("Supposedly finished Github Update");
+        }
+
+        public void NPCUpdateTick()
+        {
+            bool runCheckResult = false;
+            foreach (NPCUserState npc in UserStateRepository.NPCUserStates)
+            {
+                if (npc.CanRun) runCheckResult = npc.RunAwayCheck();
+                if (runCheckResult)
+                {
+                    npc.RunAway();
+                    UserStateRepository.NPCUserStates.Remove(npc);
+                }
+            }
+            if (UserStateRepository.NPCUserStates.Count < 12)
+            {
+                UserStateRepository.SpawnNPCs();
+            }
         }
 
         public void CheckForGithubUpdates()
