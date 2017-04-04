@@ -590,7 +590,7 @@ namespace Beta.Repository
         {
             foreach (KappaViolation violation in KappaViolations)
             {
-                if ((violation.VioltionDateTime.AddHours(24) < DateTime.Now) || (violation.MessageCount > 200))
+                if ((violation.VioltionDateTime.AddHours(1) < DateTime.Now) || (violation.MessageCount > 200))
                 {
                     KappaViolations.Remove(violation);
                 }
