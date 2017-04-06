@@ -56,6 +56,26 @@ namespace Beta.Modules
                         }                       
                     });
 
+                cgb.CreateCommand("kappa")
+                .MinPermissions((int)PermissionLevel.ServerModerator)
+                .Description("Set the ID of the kappa punishment room.")
+                .Parameter("id", ParameterType.Required)
+                .Do(async e =>
+                {
+                    ulong id = Convert.ToUInt64(e.GetArg("id"));
+                    Channel chnl = e.Server.TextChannels.FirstOrDefault( c => c.Id == id );
+                    if (chnl != null)
+                    {
+                        await e.Channel.SendMessage("Ok, I've marked that as the punishment room for all Kappa violators!");
+                        Beta.ServerStateRepository.GetServerState(e.Server.Id).KappaChannel = id;
+                    }
+                    else
+                    {
+                        await e.Channel.SendMessage("Dude, I didn't recognize that id. Try again.");
+                    }
+                        
+                });
+
                 cgb.CreateCommand("initstates")
                     .MinPermissions((int) PermissionLevel.BotOwner) 
                     .Description("Administration tool, initiate channel states for all current channels.")

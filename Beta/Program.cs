@@ -148,6 +148,7 @@ namespace Beta
             _client.Log.Message += (s, e) => WriteLog(e);
             _client.MessageReceived += (s, e) =>
             {
+                Console.WriteLine(e.Server.Id + "/" + e.Channel.Id);
                 if (!e.Message.Channel.IsPrivate)ChannelStateRepository.AddChannel(e.Channel, e.Server);
 
                 if (e.User.IsBot) UserStateRepository.AddUser(e.User.Name,"bot");
@@ -194,7 +195,7 @@ namespace Beta
                     e.Channel.SendMessage("(/¯`Д´ )/¯ ┬─┬");
                     e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
                 }
-                else if (e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                else if (Regex.IsMatch(e.Message.Text, @"b.{0,5}e.{0,5}t.{0,5}a", RegexOptions.IgnoreCase) &&
                          CheckModuleState(e, "chatty", e.Channel.IsPrivate) && !e.Message.Text.StartsWith("$") && !e.User.IsBot )
                 {//Hopefully this will loop until generateSentence() actually returns a value.
                     bool msgNotSet = true;
@@ -206,6 +207,7 @@ namespace Beta
                         try
                         {
                             //Check For French server
+                            
                             if (e.Server.Id == 178929081943851008)
                             {
                                 msg = FrenchkovChain.generateSentence();
@@ -265,7 +267,7 @@ namespace Beta
                     }
                     e.Channel.SendMessage(msg);
                 }
-                else if (Regex.IsMatch(e.Message.Text, @"k.{0,3}a.{0,3}p.{0,3}p.{0,3}a", RegexOptions.IgnoreCase) && !e.User.IsBot)
+                else if (Regex.IsMatch(e.Message.Text, @"k.{0,3}a.{0,3}p.{0,3}p.{0,3}a", RegexOptions.IgnoreCase) && ServerStateRepository.GetServerState(e.Server.Id).KappaChannel != 0 &&!e.User.IsBot)
                 {
                     e.Channel.SendMessage("Get that weak ass Twitch shit out of here, " + e.User.Mention + "! Nerd.");
                     UserStateRepository.GetUserState(e.User.Id).AddKappaViolation();
@@ -298,7 +300,8 @@ namespace Beta
                 if (!e.User.IsBot && !(e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0) && !e.Message.Text.StartsWith("$") && CheckModuleState(e, "markov",e.Channel.IsPrivate))
                 {
                     //Check for French server
-                    if (e.Server.Id == 178929081943851008)
+                    //Isardy's Server == 178929081943851008 FrenchKov Test Channel == 299555113389916160
+                    if (e.Server.Id == 178929081943851008 || e.Channel.Id == 299555113389916160)
                     {
                         FrenchkovChain.feed(e.Message.Text);
                     }
@@ -340,6 +343,7 @@ namespace Beta
                 UserStateRepository = UserStateRepository.LoadFromDisk();
                 TwitterXmlRepository = TwitterXMLRepository.LoadFromDisk();
                 MarkovChainRepository = new MultiDeepMarkovChain(3);
+                FrenchkovChain = new MultiDeepMarkovChain(3);
                 TrumpMarkovChain = new MultiDeepMarkovChain(3);
                 HillaryMarkovChain = new MultiDeepMarkovChain(3);
                 UserStateRepository.AddUser("Beta","beta");
@@ -362,8 +366,8 @@ namespace Beta
                     foreach (QueuedMessage msg in MessageQueue)
                     {
                         GetChannel(msg.ChannelId).SendMessage(msg.Message);
-                        MessageQueue.Remove(msg);
                     }
+                    MessageQueue = new List<QueuedMessage>();
                     SaveReposToFile();
                 };
                 BetaAsyncUpdateTimer.Start();
@@ -419,6 +423,20 @@ namespace Beta
                         xd.LoadXml(file.ReadToEnd());
 
                         HillaryMarkovChain.feed(xd);
+                    }
+                }
+                if (File.Exists("FrenchkovChainMemory.xml"))
+                {
+                    using (
+                        StreamReader file =
+                            new StreamReader(
+                                @"C:\Users\Dart Kietanmartaru\Desktop\Discord Bots\Beta\FrenchkovChainMemory.xml",
+                                Encoding.UTF8))
+                    {
+                        XmlDocument xd = FrenchkovChain.getXmlDocument();
+                        xd.LoadXml(file.ReadToEnd());
+
+                        FrenchkovChain.feed(xd);
                     }
                 }
 
@@ -533,14 +551,19 @@ namespace Beta
         public void NPCUpdateTick()
         {
             bool runCheckResult = false;
+            List<NPCUserState> runAways = new List<NPCUserState>();
             foreach (NPCUserState npc in UserStateRepository.NPCUserStates)
             {
                 if (npc.CanRun) runCheckResult = npc.RunAwayCheck();
                 if (runCheckResult)
                 {
                     npc.RunAway();
-                    UserStateRepository.NPCUserStates.Remove(npc);
+                    runAways.Add(npc);
                 }
+            }
+            foreach (NPCUserState npc in runAways)
+            {
+                UserStateRepository.NPCUserStates.Remove(npc);
             }
             if (UserStateRepository.NPCUserStates.Count < 12)
             {
@@ -678,6 +701,8 @@ namespace Beta
         {
             ulong srvrid = e.Server.Id;
             ulong chnlid = e.Channel.Id;
+            ServerStateRepository.AddServer(e.Server);
+            ChannelStateRepository.AddChannel(e.Channel, e.Server);
             if (isDirectMessage) return true;
             ServerState srvr = ServerStateRepository.GetServerState(srvrid);
             ChannelState chnl = ChannelStateRepository.GetChannelState(chnlid);

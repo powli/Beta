@@ -94,6 +94,9 @@ namespace Beta.Repository
         public bool AskEnabled { get; set; } = false;
 
         [XmlAttribute]
+        public ulong KappaChannel { get; set; } = 0;
+
+        [XmlAttribute]
         public bool TableUnflipEnabled { get; set; } = false;
 
         [XmlAttribute]
