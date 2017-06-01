@@ -163,7 +163,7 @@ namespace Beta
                     else
                     {
                         UserStateRepository.IncrementKappaMessageCount(e.User.Id);
-                        Cantina.SendMessage(":eggplant: Kappa. :beta:" + e.User.Mention);
+                        Cantina.SendMessage(":eggplant: Kappa." + e.User.Mention);
                     }                    
                 }
 
@@ -269,7 +269,7 @@ namespace Beta
                 }
                 else if (Regex.IsMatch(e.Message.Text, @"k.{0,3}a.{0,3}p.{0,3}p.{0,3}a", RegexOptions.IgnoreCase) && ServerStateRepository.GetServerState(e.Server.Id).KappaChannel != 0 &&!e.User.IsBot)
                 {
-                    e.Channel.SendMessage("Get that weak ass Twitch shit out of here, " + e.User.Mention + "! Nerd. :beta:");
+                    e.Channel.SendMessage("Get that weak ass Twitch shit out of here, " + e.User.Mention + "! Nerd.");
                     UserStateRepository.GetUserState(e.User.Id).AddKappaViolation();
                 }
                 /*else if (e.Message.Text.IndexOf("hillary", StringComparison.OrdinalIgnoreCase) >= 0 ||
