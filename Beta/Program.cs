@@ -163,7 +163,7 @@ namespace Beta
                     else
                     {
                         UserStateRepository.IncrementKappaMessageCount(e.User.Id);
-                        Cantina.SendMessage(":eggplant: Kappa. " + e.User.Mention);
+                        Cantina.SendMessage(":eggplant: Kappa. :beta:" + e.User.Mention);
                     }                    
                 }
 
@@ -269,7 +269,7 @@ namespace Beta
                 }
                 else if (Regex.IsMatch(e.Message.Text, @"k.{0,3}a.{0,3}p.{0,3}p.{0,3}a", RegexOptions.IgnoreCase) && ServerStateRepository.GetServerState(e.Server.Id).KappaChannel != 0 &&!e.User.IsBot)
                 {
-                    e.Channel.SendMessage("Get that weak ass Twitch shit out of here, " + e.User.Mention + "! Nerd.");
+                    e.Channel.SendMessage("Get that weak ass Twitch shit out of here, " + e.User.Mention + "! Nerd. :beta:");
                     UserStateRepository.GetUserState(e.User.Id).AddKappaViolation();
                 }
                 /*else if (e.Message.Text.IndexOf("hillary", StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -360,7 +360,7 @@ namespace Beta
                 };
                 BetaUpdateTimer.Start();                
                 System.Timers.Timer BetaAsyncUpdateTimer = new System.Timers.Timer(10 * 1000);
-                BetaAsyncUpdateTimer.AutoReset = true;
+                BetaAsyncUpdateTimer.AutoReset = false;
                 BetaAsyncUpdateTimer.Elapsed += (sender, e) =>
                 {
                     foreach (QueuedMessage msg in MessageQueue)
@@ -369,6 +369,7 @@ namespace Beta
                     }
                     MessageQueue = new List<QueuedMessage>();
                     SaveReposToFile();
+                    BetaAsyncUpdateTimer.Start();
                 };
                 BetaAsyncUpdateTimer.Start();
                
@@ -395,36 +396,7 @@ namespace Beta
 
                         MarkovChainRepository.feed(xd);
                     }
-                }
-                if (File.Exists("TrumpMarkovChainMemory.xml"))
-                {
-                    using (
-                        StreamReader file =
-                            new StreamReader(
-                                @"C:\Users\Dart Kietanmartaru\Desktop\Discord Bots\Beta\TrumpMarkovChainMemory.xml",
-                                Encoding.UTF8))
-                    {
-                        XmlDocument xd = TrumpMarkovChain.getXmlDocument();
-                        xd.LoadXml(file.ReadToEnd());
-
-                        TrumpMarkovChain.feed(xd);
-                    }
-                    
-                }
-                if (File.Exists("HillaryMarkovChainMemory.xml"))
-                {
-                    using (
-                        StreamReader file =
-                            new StreamReader(
-                                @"C:\Users\Dart Kietanmartaru\Desktop\Discord Bots\Beta\HillaryMarkovChainMemory.xml",
-                                Encoding.UTF8))
-                    {
-                        XmlDocument xd = HillaryMarkovChain.getXmlDocument();
-                        xd.LoadXml(file.ReadToEnd());
-
-                        HillaryMarkovChain.feed(xd);
-                    }
-                }
+                }               
                 if (File.Exists("FrenchkovChainMemory.xml"))
                 {
                     using (
@@ -522,21 +494,6 @@ namespace Beta
                     {
                         await channel.SendMessage("Hey Guys, I'm following a new account! " + user.ScreenName + "!");
                     }
-                };
-                stream.TweetCreatedByFriend += (sender, arg) =>
-                {
-                    ITweet tweet = arg.Tweet;
-                    if (tweet.CreatedBy.ScreenName == "realDonaldTrump" && tweet.IsRetweet == false)
-                    {
-                        TrumpMarkovChain.feed(RestSharp.Extensions.MonoHttp.HttpUtility.HtmlDecode(Regex.Replace(tweet.Text, @"(https?:\/\/(?:www\.|(?!www))[^\s\.]+\.[^\s]{2,}|www\.[^\s]+\.[^\s]{2,})", "")));
-                        TrumpMarkovChain.save("TrumpMarkovChainMemory.xml");
-                    }
-                    if (tweet.CreatedBy.ScreenName == "HillaryClinton" && tweet.IsRetweet == false)
-                    {
-                        HillaryMarkovChain.feed(RestSharp.Extensions.MonoHttp.HttpUtility.HtmlDecode(Regex.Replace(tweet.Text, @"(https?:\/\/(?:www\.|(?!www))[^\s\.]+\.[^\s]{2,}|www\.[^\s]+\.[^\s]{2,})", "")));
-                        HillaryMarkovChain.save("HillaryMarkovChainMemory.xml");
-                    }
-
                 };
                 await stream.StartStreamAsync();
             });
