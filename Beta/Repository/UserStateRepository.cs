@@ -336,7 +336,7 @@ namespace Beta.Repository
     {
         Random r = new Random();
 
-        public Result Attack(UserState target, CommandEventArgs e)
+        new public Result Attack(UserState target, CommandEventArgs e)
         {
             int dmg = (int)((target.RPGLevel * .25) * r.Next(8, 100));
             target.RPGHitpoints -= dmg;

@@ -426,7 +426,7 @@ namespace Beta.Modules
                         if (target != null && attacker.RPGStamina >= stamCost)
                         {
                             attacker.RPGStamina -= stamCost;
-                            if (attacker.RPGStamina < stamCost) e.User.SendMessage("You feel exhausted...");
+                            if (attacker.RPGStamina < stamCost) await e.User.SendMessage("You feel exhausted...");
                             if (target.RPGHitpoints == 0 && target.UserName == "Beta") target.Res(1);
                             if (!target.Alive)
                             {
