@@ -135,7 +135,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Cram\Character.cs" />
+    <Compile Include="Cram\Models\Character.cs" />
+    <Compile Include="Cram\Models\Game.cs" />
+    <Compile Include="Cram\Models\Item.cs" />
+    <Compile Include="Cram\Models\Skill.cs" />
     <Compile Include="Modules\ChatBattleModule.cs" />
     <Compile Include="Modules\GamertagModule.cs" />
     <Compile Include="Modules\NoteModule.cs" />
