@@ -22,6 +22,7 @@ using Tweetinvi.Models;
 using Tweetinvi.Streaming;
 using User = Discord.User;
 using System.Data.SQLite;
+using Beta.Cram.Models;
 
 namespace Beta    
 {
@@ -345,13 +346,32 @@ namespace Beta
                 FrenchkovChain = new MultiDeepMarkovChain(3);
                 TrumpMarkovChain = new MultiDeepMarkovChain(3);
                 HillaryMarkovChain = new MultiDeepMarkovChain(3);
-                if (!File.Exists("CRAM.sqlite"))
+                /*if (!File.Exists("CRAM.sqlite"))
                 {
                     SQLiteConnection.CreateFile("CRAM.sqlite");
                     CRAMDatabase = CreateNewCRAMDatabase(new SQLiteConnection("Data Source=CRAM.sqlite;Version=3;"));
                 }
                 else CRAMDatabase = new SQLiteConnection("Data Source=CRAM.sqlite;Version=3;");
-                CRAMDatabase.Open();
+                CRAMDatabase.Open();*/
+
+                Character character = new Character();
+                Item item = new Item();
+
+                item.ItemID = 1;
+                item.ItemDescription = "A really good item, you guys!";
+                item.ItemCost = 500;
+                item.QuantityOwned = 2;
+
+                character.CharacterID = 1;
+                character.Name = "Testy McTesterson";
+                character.PHY = 5;
+                character.LUC = 5;
+                character.MEN = 5;
+                character.VIT = 5;
+                character.Cash = 75;                
+
+                CharacterContext context = new CharacterContext();
+                context.Characters.Add(character);
 
                 UserStateRepository.AddUser("Beta","beta");
                 Servers = _client.Servers.ToList();
