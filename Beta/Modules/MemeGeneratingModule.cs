@@ -5,6 +5,7 @@ using Discord;
 using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
+using System.Drawing;
 using Beta;
 using Beta.Utils;
 using Beta.JSONConfig;
@@ -43,7 +44,53 @@ namespace Beta.Modules
             });
         }
 
+        //Overload if user provides four lines, separated by |'s
+        public static void PlaceImageText(List<string> Lines, string memeName)
+        {
+            //Graphics graph = Graphics.FromImage(img);
+            if (Lines.Count == 1)
+            {
 
+            }
+            //todo
+        }
+
+        /* public void updateImg()
+        {
+            // reset the Bitmap and reload the image
+            img = null;
+            img = new Bitmap(filePath);
+
+            Graphics graph = Graphics.FromImage(img);
+            GraphicsPath p = new GraphicsPath();
+
+            // Adds the text in textBoxUpper
+            p.AddString(
+                textBoxUpper.Text,
+                new FontFamily("Impact"),
+                (int)FontStyle.Regular,
+                graph.DpiY * font.SizeInPoints / 72,
+                new Point((int)(0.5 * img.Width), (int)(0.1 * img.Height)),
+                stringFormat);
+
+            // Adds the text in textBoxLower
+            p.AddString(
+                textBoxLower.Text,
+                new FontFamily("Impact"),
+                (int)FontStyle.Regular,
+                graph.DpiY * font.SizeInPoints / 72,
+                new Point((int)(0.5 * img.Width), (int)(0.9 * img.Height)),
+                stringFormat);
+
+            Pen pen = new Pen(Brushes.Black, font.SizeInPoints / 10); // pen for the text outline
+            pen.Alignment = PenAlignment.Center;
+            pen.LineJoin = LineJoin.Round; // Prevents spikes on some letters
+            graph.DrawPath(pen, p); // makes the outline
+            graph.FillPath(Brushes.White, p); // fills the path
+
+            // sets the pictureBox.Image to to edited one
+            pictureBox1.Image = img;
+        }*/
     }
 }
 
