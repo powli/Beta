@@ -146,171 +146,174 @@ namespace Beta
             _client.Log.Message += (s, e) => WriteLog(e);
             _client.MessageReceived += (s, e) =>
             {
-                Console.WriteLine(e.Server.Id + "/" + e.Channel.Id);
-                if (!e.Message.Channel.IsPrivate)ChannelStateRepository.AddChannel(e.Channel, e.Server);
+                if (!e.Message.Channel.IsPrivate) {
+                    Console.WriteLine(e.Server.Id + "/" + e.Channel.Id);
+                    if (!e.Message.Channel.IsPrivate) ChannelStateRepository.AddChannel(e.Channel, e.Server);
 
-                if (e.User.IsBot) UserStateRepository.AddUser(e.User.Name,"bot");
-                else UserStateRepository.AddUser(e.User);
+                    if (e.User.IsBot) UserStateRepository.AddUser(e.User.Name, "bot");
+                    else UserStateRepository.AddUser(e.User);
 
-                if (!e.User.IsBot && UserStateRepository.GetUserState(e.User.Id).HasKappaViolations())
-                {
-                    if (GetPermissions(e.User,e.Channel) >= PermissionLevel.ChannelModerator)
+                    if (!e.User.IsBot && UserStateRepository.GetUserState(e.User.Id).HasKappaViolations())
                     {
-                        UserStateRepository.GetUserState(e.User.Id).ClearAllKappas();
-                    }
-                    else
-                    {
-                        UserStateRepository.IncrementKappaMessageCount(e.User.Id);
-                        Cantina.SendMessage(":eggplant: Kappa." + e.User.Mention);
-                    }                    
-                }
-
-                if (e.Message.IsAuthor)
-                    _client.Log.Info("<<Message",
-                        $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name},{e.User.Id}> {e.Message.Text}");
-                else
-                    _client.Log.Info(">>Message",
-                        $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name},{e.User.Id}> {e.Message.Text}");
-
-                if (Regex.IsMatch(e.Message.Text, @"[)ʔ）][╯ノ┛].+┻━┻") &&
-                    CheckModuleState(e, "table", e.Channel.IsPrivate))
-                {
-                    IngestTwitterHistory();
-                    int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 1);
-                    e.Channel.SendMessage("┬─┬  ノ( º _ ºノ) ");
-                    e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
-                }
-                else if (e.Message.Text == "(ノಠ益ಠ)ノ彡┻━┻" && CheckModuleState(e, "table", e.Channel.IsPrivate))
-                {
-                    int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 2);
-                    e.Channel.SendMessage("┬─┬  ノ(ಠ益ಠノ)");
-                    e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
-                }
-                else if (e.Message.Text == "┻━┻ ︵ヽ(`Д´)ﾉ︵ ┻━┻" && CheckModuleState(e, "table", e.Channel.IsPrivate))
-                {
-                    int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 3);
-                    e.Channel.SendMessage("┬─┬  ノ(`Д´ノ)");
-                    e.Channel.SendMessage("(/¯`Д´ )/¯ ┬─┬");
-                    e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
-                }
-                else if (Regex.IsMatch(e.Message.Text, @"b.{0,5}e.{0,5}t.{0,5}a", RegexOptions.IgnoreCase) &&
-                         CheckModuleState(e, "chatty", e.Channel.IsPrivate) && !e.Message.Text.StartsWith("$") && !e.User.IsBot )
-                {//Hopefully this will loop until generateSentence() actually returns a value.
-                    bool msgNotSet = true;
-                    string msg = "";
-                    int rerollAttempts = 0;
-                    while (msgNotSet)
-                    {
-                        rerollAttempts++;
-                        try
+                        if (GetPermissions(e.User, e.Channel) >= PermissionLevel.ChannelModerator)
                         {
-                            //Check For French server
-                            
-                            if (e.Server.Id == 178929081943851008)
+                            UserStateRepository.GetUserState(e.User.Id).ClearAllKappas();
+                        }
+                        else
+                        {
+                            UserStateRepository.IncrementKappaMessageCount(e.User.Id);
+                            Cantina.SendMessage(":eggplant: Kappa." + e.User.Mention);
+                        }
+                    }
+
+                    if (e.Message.IsAuthor)
+                        _client.Log.Info("<<Message",
+                            $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name},{e.User.Id}> {e.Message.Text}");
+                    else
+                        _client.Log.Info(">>Message",
+                            $"[{((e.Server != null) ? e.Server.Name : "Private")}{((!e.Channel.IsPrivate) ? $"/#{e.Channel.Name}" : "")}] <@{e.User.Name},{e.User.Id}> {e.Message.Text}");
+
+                    if (Regex.IsMatch(e.Message.Text, @"[)ʔ）][╯ノ┛].+┻━┻") &&
+                        CheckModuleState(e, "table", e.Channel.IsPrivate))
+                    {
+                        IngestTwitterHistory();
+                        int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 1);
+                        e.Channel.SendMessage("┬─┬  ノ( º _ ºノ) ");
+                        e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
+                    }
+                    else if (e.Message.Text == "(ノಠ益ಠ)ノ彡┻━┻" && CheckModuleState(e, "table", e.Channel.IsPrivate))
+                    {
+                        int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 2);
+                        e.Channel.SendMessage("┬─┬  ノ(ಠ益ಠノ)");
+                        e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
+                    }
+                    else if (e.Message.Text == "┻━┻ ︵ヽ(`Д´)ﾉ︵ ┻━┻" && CheckModuleState(e, "table", e.Channel.IsPrivate))
+                    {
+                        int points = UserStateRepository.IncrementTableFlipPoints(e.User.Id, 3);
+                        e.Channel.SendMessage("┬─┬  ノ(`Д´ノ)");
+                        e.Channel.SendMessage("(/¯`Д´ )/¯ ┬─┬");
+                        e.Channel.SendMessage(GetTableFlipResponse(points, e.User.Name));
+                    }
+                    else if (Regex.IsMatch(e.Message.Text, @"b.{0,5}e.{0,5}t.{0,5}a", RegexOptions.IgnoreCase) &&
+                             CheckModuleState(e, "chatty", e.Channel.IsPrivate) && !e.Message.Text.StartsWith("$") && !e.User.IsBot)
+                    {//Hopefully this will loop until generateSentence() actually returns a value.
+                        bool msgNotSet = true;
+                        string msg = "";
+                        int rerollAttempts = 0;
+                        while (msgNotSet)
+                        {
+                            rerollAttempts++;
+                            try
+                            {
+                                //Check For French server
+
+                                if (e.Server.Id == 178929081943851008)
+                                {
+                                    msg = FrenchkovChain.generateSentence();
+                                    msgNotSet = false;
+
+                                }
+                                else
+                                {
+                                    msg = MarkovChainRepository.generateSentence();
+                                    msgNotSet = false;
+                                }
+
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("Failed to generate a sentence, trying again...");
+                                Console.WriteLine(ex.Message);
+                            }
+                            if (rerollAttempts > 10 && msgNotSet)
+                            {
+                                if (e.Server.Id == 178929081943851008)
+                                {
+                                    msg = "Je suis désolé, on dirait que j'ai été incapable de générer une phrase.";
+                                }
+                                else
+                                {
+                                    msg = "I'm sorry, it looks like I'm unable to generate a sentence at this time.";
+                                }
+                                msgNotSet = false;
+                            }
+                        }
+                        e.Channel.SendMessage(msg);
+                    }
+                    else if (e.Message.Text.IndexOf("hon", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                             CheckModuleState(e, "chatty", e.Channel.IsPrivate) && !e.Message.Text.StartsWith("$") &&
+                             !e.User.IsBot)
+                    {
+                        bool msgNotSet = true;
+                        string msg = "";
+                        int rerollAttempts = 0;
+                        while (msgNotSet)
+                        {
+                            rerollAttempts++;
+                            try
                             {
                                 msg = FrenchkovChain.generateSentence();
                                 msgNotSet = false;
-                                
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                msg = MarkovChainRepository.generateSentence();
-                                msgNotSet = false;
+                                Console.WriteLine("Failed to generate a sentence, trying again...");
+                                Console.WriteLine(ex.Message);
                             }
-                           
-                        }
-                        catch(Exception ex)
-                        {
-                            Console.WriteLine("Failed to generate a sentence, trying again...");
-                            Console.WriteLine(ex.Message);
-                        }
-                        if (rerollAttempts > 10 && msgNotSet)
-                        {
-                            if (e.Server.Id == 178929081943851008)
+                            if (rerollAttempts > 10)
                             {
                                 msg = "Je suis désolé, on dirait que j'ai été incapable de générer une phrase.";
-                            }
-                            else
-                            {
-                                msg = "I'm sorry, it looks like I'm unable to generate a sentence at this time.";
-                            }
-                            msgNotSet = false;
-                        }
-                    }
-                    e.Channel.SendMessage(msg);
-                }
-                else if (e.Message.Text.IndexOf("hon", StringComparison.OrdinalIgnoreCase) >= 0 &&
-                         CheckModuleState(e, "chatty", e.Channel.IsPrivate) && !e.Message.Text.StartsWith("$") &&
-                         !e.User.IsBot)
-                {
-                    bool msgNotSet = true;
-                    string msg = "";
-                    int rerollAttempts = 0;
-                    while (msgNotSet)
-                    {
-                        rerollAttempts++;
-                        try
-                        {
-                                msg = FrenchkovChain.generateSentence();
                                 msgNotSet = false;
+                            }
                         }
-                        catch (Exception ex)
+                        e.Channel.SendMessage(msg);
+                    }
+                    else if (Regex.IsMatch(e.Message.Text, @"k.{0,3}a.{0,3}p.{0,3}p.{0,3}a", RegexOptions.IgnoreCase) && ServerStateRepository.GetServerState(e.Server.Id).KappaChannel != 0 && !e.User.IsBot)
+                    {
+                        e.Channel.SendMessage("Get that weak ass Twitch shit out of here, " + e.User.Mention + "! Nerd.");
+                        UserStateRepository.GetUserState(e.User.Id).AddKappaViolation();
+                    }
+                    /*else if (e.Message.Text.IndexOf("hillary", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                             e.Message.Text.IndexOf("clinton", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                             CheckModuleState(e, "politics", e.Channel.IsPrivate) && !e.User.IsBot)
+                    {
+                        ChangeExpression("hillary", "Hillary R Clinton");
+                        System.Threading.Thread.Sleep(1000);
+                        e.Channel.SendMessage(HillaryMarkovChain.generateSentence());
+                        System.Threading.Thread.Sleep(5000);
+                        ChangeExpression("resting", "Beta");
+                    }
+                    else if (e.Message.Text.IndexOf("donald", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                             e.Message.Text.IndexOf("trump", StringComparison.OrdinalIgnoreCase) >= 0 && 
+                             CheckModuleState(e, "politics", e.Channel.IsPrivate) && !e.User.IsBot)
+                    {
+                        ChangeExpression("trump", "Donald J. Trump");
+                        System.Threading.Thread.Sleep(1000);
+                        e.Channel.SendMessage(TrumpMarkovChain.generateSentence());
+                        System.Threading.Thread.Sleep(5000);
+                        ChangeExpression("resting", "Beta");
+                        Console.WriteLine(Tweetinvi.Tweet.CanBePublished("@realDonaldTrump Loser."));
+                        /* if (Tweetinvi.Tweet.PublishTweet("@realDonaldTrump Loser.") == null)
                         {
-                            Console.WriteLine("Failed to generate a sentence, trying again...");
-                            Console.WriteLine(ex.Message);
-                        }
-                        if (rerollAttempts > 10)
+                            Console.WriteLine("[HIGH PRIORITY ALERT] Reminding Donald Trump he is a loser failed.");
+                        }*//*
+                    }*/
+                    if (!e.User.IsBot && !(e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0) && !e.Message.Text.StartsWith("$") && CheckModuleState(e, "markov", e.Channel.IsPrivate))
+                    {
+                        //Check for French server
+                        //Isardy's Server == 178929081943851008 FrenchKov Test Channel == 299555113389916160
+                        if (e.Server.Id == 178929081943851008 || e.Channel.Id == 299555113389916160)
                         {
-                            msg = "Je suis désolé, on dirait que j'ai été incapable de générer une phrase.";
-                            msgNotSet = false;
+                            FrenchkovChain.feed(e.Message.Text);
                         }
+                        else
+                        {
+                            MarkovChainRepository.feed(e.Message.Text);
+                        }
+
                     }
-                    e.Channel.SendMessage(msg);
                 }
-                else if (Regex.IsMatch(e.Message.Text, @"k.{0,3}a.{0,3}p.{0,3}p.{0,3}a", RegexOptions.IgnoreCase) && ServerStateRepository.GetServerState(e.Server.Id).KappaChannel != 0 &&!e.User.IsBot)
-                {
-                    e.Channel.SendMessage("Get that weak ass Twitch shit out of here, " + e.User.Mention + "! Nerd.");
-                    UserStateRepository.GetUserState(e.User.Id).AddKappaViolation();
-                }
-                /*else if (e.Message.Text.IndexOf("hillary", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                         e.Message.Text.IndexOf("clinton", StringComparison.OrdinalIgnoreCase) >= 0 &&
-                         CheckModuleState(e, "politics", e.Channel.IsPrivate) && !e.User.IsBot)
-                {
-                    ChangeExpression("hillary", "Hillary R Clinton");
-                    System.Threading.Thread.Sleep(1000);
-                    e.Channel.SendMessage(HillaryMarkovChain.generateSentence());
-                    System.Threading.Thread.Sleep(5000);
-                    ChangeExpression("resting", "Beta");
-                }
-                else if (e.Message.Text.IndexOf("donald", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                         e.Message.Text.IndexOf("trump", StringComparison.OrdinalIgnoreCase) >= 0 && 
-                         CheckModuleState(e, "politics", e.Channel.IsPrivate) && !e.User.IsBot)
-                {
-                    ChangeExpression("trump", "Donald J. Trump");
-                    System.Threading.Thread.Sleep(1000);
-                    e.Channel.SendMessage(TrumpMarkovChain.generateSentence());
-                    System.Threading.Thread.Sleep(5000);
-                    ChangeExpression("resting", "Beta");
-                    Console.WriteLine(Tweetinvi.Tweet.CanBePublished("@realDonaldTrump Loser."));
-                    /* if (Tweetinvi.Tweet.PublishTweet("@realDonaldTrump Loser.") == null)
-                    {
-                        Console.WriteLine("[HIGH PRIORITY ALERT] Reminding Donald Trump he is a loser failed.");
-                    }*//*
-                }*/
-                if (!e.User.IsBot && !(e.Message.Text.IndexOf("beta", StringComparison.OrdinalIgnoreCase) >= 0) && !e.Message.Text.StartsWith("$") && CheckModuleState(e, "markov",e.Channel.IsPrivate))
-                {
-                    //Check for French server
-                    //Isardy's Server == 178929081943851008 FrenchKov Test Channel == 299555113389916160
-                    if (e.Server.Id == 178929081943851008 || e.Channel.Id == 299555113389916160)
-                    {
-                        FrenchkovChain.feed(e.Message.Text);
-                    }
-                    else
-                    {
-                        MarkovChainRepository.feed(e.Message.Text);
-                    }
-                    
-                }
+
             };
 
 
@@ -330,7 +333,8 @@ namespace Beta
             _client.AddModule<ComicModule>("Comics", ModuleFilter.None);
             _client.AddModule<GamertagModule>("Gamertag", ModuleFilter.None);
             _client.AddModule<NoteModule>("Note", ModuleFilter.None);
-            _client.AddModule<ChatBattleModule>("Chat Battle", ModuleFilter.None);           
+            _client.AddModule<ChatBattleModule>("Chat Battle", ModuleFilter.None);
+            _client.AddModule<MemeGeneratingModule>("Memes", ModuleFilter.None);
 
             _client.ExecuteAndWait(async () =>
             {
@@ -354,7 +358,7 @@ namespace Beta
                 else CRAMDatabase = new SQLiteConnection("Data Source=CRAM.sqlite;Version=3;");
                 CRAMDatabase.Open();*/
 
-                Character character = new Character();
+                /*Character character = new Character();
                 Item item = new Item();
 
                 item.ItemID = 1;
@@ -371,7 +375,7 @@ namespace Beta
                 character.Cash = 75;                
 
                 CharacterContext context = new CharacterContext();
-                context.Characters.Add(character);
+                context.Characters.Add(character);*/
 
                 UserStateRepository.AddUser("Beta","beta");
                 Servers = _client.Servers.ToList();
@@ -1047,7 +1051,13 @@ namespace Beta
         ///Adds all quotes in the file to the Quotes.XML
         public void Convert(QuoteRepository convRepo)
         {
+            if (!Directory.Exists(quoteDir))
+            {
+                Directory.CreateDirectory(quoteDir);
+            }
             authorList = GetAuthors(quoteDir);
+
+            
 
             for (int i = 0; i < authorList.Count; i++)
             {

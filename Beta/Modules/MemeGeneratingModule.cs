@@ -21,23 +21,17 @@ namespace Beta.Modules
         private DiscordClient _client;
         private ModuleManager _manager;
         private StringFormat stringFormat;
+        private List<string> Memes;
 
         Font font = new Font("Impact", 200);
 
-        string memeplateFolder = "./Memeplates/";
-        string memeFolder = "./Memes/";
+        string memeplateFolder = "Memeplates/";
+        string memeFolder = "Memes/";
 
         public override string Prefix { get; } = Beta.Config.CommandPrefixes.Standard;
 
         public override void Install(ModuleManager manager)
         {
-            _manager = manager;
-            _client = manager.Client;
-
-            stringFormat = new StringFormat();
-            stringFormat.Alignment = StringAlignment.Center;
-            stringFormat.LineAlignment = StringAlignment.Center;
-
             if (!Directory.Exists(memeplateFolder))
             {
                 Directory.CreateDirectory(memeplateFolder);
@@ -47,20 +41,36 @@ namespace Beta.Modules
                 Directory.CreateDirectory(memeFolder);
             }
 
+            _manager = manager;
+            _client = manager.Client;
+            Memes = GetMemeList();
+
+            stringFormat = new StringFormat();
+            stringFormat.Alignment = StringAlignment.Center;
+            stringFormat.LineAlignment = StringAlignment.Center;
+
+            
+
             _manager.CreateCommands("", cgb =>
             {
                 cgb.MinPermissions((int)PermissionLevel.User);
 
                 cgb.CreateCommand("meme")
-                .Description("Memes are coming.")
+                .Description("Generate your own meme on the fly! Examples:\n\n$meme Random|TopText|BottomText\n$meme YUNo|TopTextOnly\n\nSee $memelist for available Memes are just use Random!")
                 .Parameter("memeArgs", ParameterType.Optional)
                 .Do(async e =>
                 {
                     List<string> args = e.GetArg("memeArgs").Split('|').ToList<string>();
-                    if(args.Count == 2)
+                    if(args.Count >= 2)
                     {
                         string memeName = args[0];
-                        string fileName = memeFolder + memeName + DateTime.Now.ToString();
+                        if (memeName.ToLower() == "random")
+                        {
+                            memeName = Memes.GetRandom();
+                            Console.WriteLine(memeName);
+                        }
+                        string fileName = memeFolder + memeName + DateTime.Now.ToString("hhmmss")+".png";
+                        Console.WriteLine(fileName);
                         args.RemoveAt(0);
                         Image imageWithMemeText = PlaceImageText(args, memeName, e);
                         if (imageWithMemeText != null)
@@ -69,11 +79,27 @@ namespace Beta.Modules
                             await e.Channel.SendFile(fileName);
                         }
                     }
-                    //todo
-                    await e.Channel.SendMessage("http://puu.sh/wxLKb/a33cdf1422.jpg");
+                });
+
+                cgb.CreateCommand("memelist")
+                .Alias("listmemes")
+                .Description("Have a list of available Memes PM'd to you")
+                .Do(async e =>
+                {
+                    string message = "Here are the memes I have available: \n";
+                    foreach (string meme in Memes)
+                    {
+                        message += meme + "\n";
+                    }
+                    await e.User.SendMessage(message);
                 });
 
             });
+        }
+
+        private List<string> GetMemeList()
+        {
+            return Directory.GetFiles(memeplateFolder).Select(fileName => Path.GetFileNameWithoutExtension(fileName)).ToList<string>();            
         }
 
         public Image OpenImageFile(string memeName, CommandEventArgs e)
