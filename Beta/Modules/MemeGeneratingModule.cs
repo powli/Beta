@@ -57,7 +57,7 @@ namespace Beta.Modules
 
                 cgb.CreateCommand("meme")
                 .Description("Generate your own meme on the fly! Examples:\n\n$meme Random|TopText|BottomText\n$meme YUNo|TopTextOnly\n\nSee $memelist for available Memes are just use Random!")
-                .Parameter("memeArgs", ParameterType.Optional)
+                .Parameter("memeArgs", ParameterType.Required)
                 .Do(async e =>
                 {
                     List<string> args = e.GetArg("memeArgs").Split('|').ToList<string>();
@@ -86,6 +86,7 @@ namespace Beta.Modules
                 .Description("Have a list of available Memes PM'd to you")
                 .Do(async e =>
                 {
+                    Memes = GetMemeList();
                     string message = "Here are the memes I have available: \n";
                     foreach (string meme in Memes)
                     {
@@ -119,19 +120,50 @@ namespace Beta.Modules
             return img;
         }
 
-        //Overload if user provides four lines, separated by |'s
+        //Adjust Font and return one of proper size
+        public Font GetAdjustedFont(Graphics GraphicRef, string GraphicString, Font OriginalFont, int ContainerWidth, int MaxFontSize, int MinFontSize, bool SmallestOnFail)
+        {
+            // We utilize MeasureString which we get via a control instance           
+            for (int AdjustedSize = MaxFontSize; AdjustedSize >= MinFontSize; AdjustedSize--)
+            {
+                Font TestFont = new Font(OriginalFont.Name, AdjustedSize, OriginalFont.Style);
+
+                // Test the string with the new size
+                SizeF AdjustedSizeNew = GraphicRef.MeasureString(GraphicString, TestFont);
+
+                if (ContainerWidth > Convert.ToInt32(AdjustedSizeNew.Width))
+                {
+                    // Good font, return it
+                    return TestFont;
+                }
+            }
+
+            // If you get here there was no fontsize that worked
+            // return MinimumSize or Original?
+            if (SmallestOnFail)
+            {
+                return new Font(OriginalFont.Name, MinFontSize, OriginalFont.Style);
+            }
+            else
+            {
+                return OriginalFont;
+            }
+        }
+
         public Image PlaceImageText(List<string> Lines, string memeName, CommandEventArgs e)
         {
             Image img = OpenImageFile(memeName,e);
             if (img != null)
             {
+                int width = img.Width;
                 Graphics graph = Graphics.FromImage(img);
                 GraphicsPath p = new GraphicsPath();
-
+                
                 if (Lines.Count == 1)
                 {
+                    font = GetAdjustedFont(graph, Lines[0], font, width, Convert.ToInt32(font.SizeInPoints), 10, true);
                     p.AddString(
-                    Lines[0],
+                    Lines[0].ToUpper(),
                     new FontFamily("Impact"),
                     (int)FontStyle.Regular,
                     graph.DpiY * font.SizeInPoints / 72,
@@ -141,8 +173,9 @@ namespace Beta.Modules
                 else if (Lines.Count == 2)
                 {
                     //FirstLine
+                    font = GetAdjustedFont(graph, Lines[0], font, width, Convert.ToInt32(font.Size), 10, true);
                     p.AddString(
-                    Lines[0],
+                    Lines[0].ToUpper(),
                     new FontFamily("Impact"),
                     (int)FontStyle.Regular,
                     graph.DpiY * font.SizeInPoints / 72,
@@ -150,8 +183,9 @@ namespace Beta.Modules
                     stringFormat);
 
                     //SecondLine
+                    font = GetAdjustedFont(graph, Lines[1], font, width, Convert.ToInt32(font.Size), 10, true);
                     p.AddString(
-                   Lines[1],
+                   Lines[1].ToUpper(),
                    new FontFamily("Impact"),
                    (int)FontStyle.Regular,
                    graph.DpiY * font.SizeInPoints / 72,
