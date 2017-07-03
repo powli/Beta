@@ -183,7 +183,7 @@ namespace Beta.Modules
 
                 if (Lines.Count == 1)
                 {
-                    font = GetAdjustedFont(graph, "  " + Lines[0], font, width, Convert.ToInt32(font.SizeInPoints), 10, true);
+                    font = GetAdjustedFont(graph, "DD" + Lines[0] + "DD", font, width, Convert.ToInt32(font.SizeInPoints), 10, true);
                     p.AddString(
                     Lines[0].ToUpper(),
                     new FontFamily("Impact"),
@@ -196,9 +196,9 @@ namespace Beta.Modules
                 {
                     if (Lines[0].Length > Lines[1].Length)
                     {
-                        font = GetAdjustedFont(graph, "  "+Lines[0]+"  ", font, width, Convert.ToInt32(font.Size), 10, true);
+                        font = GetAdjustedFont(graph, "DD"+Lines[0]+"DD", font, width, Convert.ToInt32(font.Size), 10, true);
                     }
-                    else font = GetAdjustedFont(graph, "  " + Lines[1] + "  ", font, width, Convert.ToInt32(font.Size), 10, true);
+                    else font = GetAdjustedFont(graph, "DD" + Lines[1] + "DD", font, width, Convert.ToInt32(font.Size), 10, true);
                     //FirstLine
 
                     p.AddString(
