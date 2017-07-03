@@ -56,7 +56,7 @@ namespace Beta.Modules
                 cgb.MinPermissions((int)PermissionLevel.User);
 
                 cgb.CreateCommand("meme")
-                .Description("Generate your own meme on the fly! Examples:\n\n$meme Random|TopText|BottomText\n$meme YUNo|TopTextOnly\n\nSee $memelist for available Memes are just use Random!")
+                .Description("Generate your own meme on the fly! Examples:\n\n$meme \"Random|TopText|BottomText\n$meme YUNo|TopTextOnly\n\nSee $memelist for available Memes are just use Random!\"")
                 .Parameter("memeArgs", ParameterType.Required)
                 .Do(async e =>
                 {
@@ -95,6 +95,28 @@ namespace Beta.Modules
                     await e.User.SendMessage(message);
                 });
 
+                cgb.CreateCommand("addmeme")
+                .Description("Add the specified link to an image as a meme, with the given name. Example:\n\n$addmeme \"OverlyAttachedGirlfriend|https://imgflip.com/s/meme/Overly-Attached-Girlfriend.jpg\"")
+                .Parameter("text", ParameterType.Required)
+                .MinPermissions((int)PermissionLevel.ChannelModerator)
+                .Do(async e =>
+                {
+                    List<string> args = e.GetArg("text").Split('|').ToList<string>();
+                    string memeName = args[0];
+                    string link = args[1];
+                    using(WebClient client = new WebClient())
+                    {
+                        try
+                        {
+                            client.DownloadFile(new Uri(link), memeplateFolder + memeName + ".png");
+                        }
+                        catch
+                        {
+                            await e.Channel.SendMessage("Sorry, I wasn't able to download that image. Check your link out, my dude.");
+                        }
+                    }
+                    await e.Channel.SendMessage("Ok, I've added that Memeplate for you!");
+                });
             });
         }
 
@@ -158,10 +180,10 @@ namespace Beta.Modules
                 int width = img.Width;
                 Graphics graph = Graphics.FromImage(img);
                 GraphicsPath p = new GraphicsPath();
-                
+
                 if (Lines.Count == 1)
                 {
-                    font = GetAdjustedFont(graph, Lines[0], font, width, Convert.ToInt32(font.SizeInPoints), 10, true);
+                    font = GetAdjustedFont(graph, "  " + Lines[0], font, width, Convert.ToInt32(font.SizeInPoints), 10, true);
                     p.AddString(
                     Lines[0].ToUpper(),
                     new FontFamily("Impact"),
@@ -172,8 +194,13 @@ namespace Beta.Modules
                 }
                 else if (Lines.Count == 2)
                 {
+                    if (Lines[0].Length > Lines[1].Length)
+                    {
+                        font = GetAdjustedFont(graph, "  "+Lines[0]+"  ", font, width, Convert.ToInt32(font.Size), 10, true);
+                    }
+                    else font = GetAdjustedFont(graph, "  " + Lines[1] + "  ", font, width, Convert.ToInt32(font.Size), 10, true);
                     //FirstLine
-                    font = GetAdjustedFont(graph, Lines[0], font, width, Convert.ToInt32(font.Size), 10, true);
+
                     p.AddString(
                     Lines[0].ToUpper(),
                     new FontFamily("Impact"),
@@ -183,7 +210,7 @@ namespace Beta.Modules
                     stringFormat);
 
                     //SecondLine
-                    font = GetAdjustedFont(graph, Lines[1], font, width, Convert.ToInt32(font.Size), 10, true);
+                    
                     p.AddString(
                    Lines[1].ToUpper(),
                    new FontFamily("Impact"),
