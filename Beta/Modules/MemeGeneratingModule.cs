@@ -13,6 +13,7 @@ using Beta.JSONConfig;
 using Newtonsoft.Json;
 using System.Net;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 
 namespace Beta.Modules
 {
@@ -70,12 +71,13 @@ namespace Beta.Modules
                             Console.WriteLine(memeName);
                         }
                         string fileName = memeFolder + memeName + DateTime.Now.ToString("hhmmss")+".png";
-                        Console.WriteLine(fileName);
+                        
                         args.RemoveAt(0);
                         Image imageWithMemeText = PlaceImageText(args, memeName, e);
                         if (imageWithMemeText != null)
                         {
-                            imageWithMemeText.Save(fileName);
+                            
+                            imageWithMemeText.Save(fileName, ImageFormat.Png);
                             await e.Channel.SendFile(fileName);
                         }
                     }

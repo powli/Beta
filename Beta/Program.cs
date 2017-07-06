@@ -9,6 +9,7 @@ using Discord.Modules;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml;
+using Beta.Cram;
 using Beta.Modules;
 using Beta.JSONConfig;
 using Beta.Repository;
@@ -358,24 +359,24 @@ namespace Beta
                 else CRAMDatabase = new SQLiteConnection("Data Source=CRAM.sqlite;Version=3;");
                 CRAMDatabase.Open();*/
 
-                /*Character character = new Character();
-                Item item = new Item();
 
-                item.ItemID = 1;
-                item.ItemDescription = "A really good item, you guys!";
-                item.ItemCost = 500;
-                item.QuantityOwned = 2;
 
-                character.CharacterID = 1;
-                character.Name = "Testy McTesterson";
-                character.PHY = 5;
-                character.LUC = 5;
-                character.MEN = 5;
-                character.VIT = 5;
-                character.Cash = 75;                
-
-                CharacterContext context = new CharacterContext();
-                context.Characters.Add(character);*/
+                using (var db = new CharacterContext())
+                {
+                    CramManager.InitializeCharacterDatabase();   
+                    Character character = db.Characters.Find(1);                    
+                    while(character == null)
+                    {
+                        db.Characters.Add(new Character("Joe", 5, 5, 5, 5, 2, new Guid()));
+                        db.SaveChanges();
+                        character = db.Characters.Find(1);
+                    }
+                    character.AddItem(new Item("Item", "An Item", 5.00),1);
+                    character.AddItem(character.CharacterItems[0], 7);
+                    List<Item> items = CramManager.GenerateNewItemList();
+                    List<Skill> Skills = CramManager.GenerateNewSkillList();
+                    db.SaveChanges();
+                }                
 
                 UserStateRepository.AddUser("Beta","beta");
                 Servers = _client.Servers.ToList();
@@ -528,96 +529,7 @@ namespace Beta
                 };
                 await stream.StartStreamAsync();
             });
-        }
-
-        private SQLiteConnection CreateNewCRAMDatabase(SQLiteConnection CramDB)
-        {
-            Console.WriteLine("Open Method");
-            CramDB.Open();
-            // Character table. Contains character stats, as well as storing the Discord ID of the user to associate with the character.
-            SQLiteCommand createCharacterTable = new SQLiteCommand("create table Characters (ID INT, Name VARCHAR(60), PHY INT, MEN INT, VIT INT, LUC INT)", CramDB);
-            // Tracks all skills available by default. Contains a Skill Name, ID, Description, and a Game_ID used to identify default skills from those available in specific games.
-            SQLiteCommand createSkillListTable = new SQLiteCommand("create table Skills (ID INT, Skill_Name VARCHAR(60), Skill_Description VARCHAR(400), Game_ID INT)", CramDB);
-            // Tracks all inventory items available by default. Contains item name, ID, description, cost, and a Game_ID used to identify default items from those available in specific games.
-            SQLiteCommand createInventoryListTable = new SQLiteCommand("create table Items (ID INT, Item_Name VARCHAR(60), Item_Description VARCHAR(400), Item_Cost DOUBLE, Game_ID INT)", CramDB);
-            // Tracks all existing game. Contains an ID, game name, game description, a bool indicating if users can join or need to be invited, a boolean indicating if the default Skills are used, a boolean indicating if the default Inventory is used, and the ID of the Game Master.
-            SQLiteCommand createGamesTable = new SQLiteCommand("create table Games (ID INT, Game_Name VARCHAR (60), Description VARCHAR(400), Open_To_Public BOOLEAN, GM_ID INT)", CramDB);
-            // Tracks a characters inventory. Contains a Character ID, a Game ID an Item ID, an Item Quanity amount, and a bool to indicate if the item is Game-Specific.
-            SQLiteCommand createCharacterInventoriesTable = new SQLiteCommand("create table CharacterInventories (Character_ID INT, Game_ID INT, Item_ID INT, Item_Quanity INT, Game_Specific BOOLEAN)", CramDB);
-            // Tracks a characters skills. Contains a Character ID, a Game ID, a Skill ID, and a bool to indicate if the skill is Game-Specific.
-            SQLiteCommand createCharacterSkillsTable = new SQLiteCommand("create table CharacterSkills (Character_ID INT, Game_ID INT, Skill_ID INT, Game_Specific BOOLEAN)", CramDB);
-            // Tracks characters belonging to each game. Contains a Character ID, a Game ID, and the amount of cash the player has for that game.
-            SQLiteCommand createGameCharactersTable = new SQLiteCommand("create table GameCharacters (Game_ID INT, Character_ID INT, Cash Double)", CramDB);
-
-            //Statements to add skills to the SkillsListTable
-            SQLiteCommand addAthletics = new SQLiteCommand("INSERT INTO Skills (ID, Skill_Name, Skill_Description, Game_ID) VALUES (1,'Athletics','feats of endurance, brute strength, and acrobatics.', 0)",CramDB);
-            SQLiteCommand addLore = new SQLiteCommand("INSERT INTO Skills (ID, Skill_Name, Skill_Description, Game_ID) VALUES (2,'Lore','history, folklore, languages, religion, philosophy, and the occult.', 0)", CramDB);
-            SQLiteCommand addMartial = new SQLiteCommand("INSERT INTO Skills (ID, Skill_Name, Skill_Description, Game_ID) VALUES (3,'Lore','all forms of armed and unarmed combat.', 0)", CramDB);
-            SQLiteCommand addMedicine = new SQLiteCommand("INSERT INTO Skills(ID, Skill_Name, Skill_Description, Game_ID) VALUES (4, 'Medicine', 'healthcare, surgery, and pharmacology.', 0)", CramDB);
-            SQLiteCommand addClairovoyance = new SQLiteCommand("INSERT INTO Skills(ID, Skill_Name, Skill_Description, Game_ID) VALUES (5,'Clairvoyance', 'The ability to see the future', 0)", CramDB);
-            SQLiteCommand addTelekinesis = new SQLiteCommand("INSERT INTO Skills(ID, Skill_Name, Skill_Description, Game_ID) VALUES (6,'Telekinesis', 'The ability to move things with your mind',0)", CramDB);
-            SQLiteCommand addTelepathy = new SQLiteCommand("INSERT INTO Skills(ID, Skill_Name, Skill_Description, Game_ID) VALUES (7, 'Telepathy', 'The ability to read minds',0)", CramDB);
-            SQLiteCommand addRhetoric = new SQLiteCommand("INSERT INTO Skills(ID, Skill_Name, Skill_Description, Game_ID) VALUES (8, 'Rhetoric', 'persuasive speaking, negotiation, and diplomacy.',0)", CramDB);
-            SQLiteCommand addScience = new SQLiteCommand("INSERT INTO Skills(ID, Skill_Name, Skill_Description, Game_ID) VALUES (9, 'Science', 'mathematics, physics, chemistry, biology, etc.',0)", CramDB);
-            SQLiteCommand addSubterfuge = new SQLiteCommand("INSERT INTO Skills(ID, Skill_Name, Skill_Description, Game_ID) VALUES (10, 'Subterfuge', 'disguise, legerdemain, security, stealth, and streetwise.',0)", CramDB);
-            SQLiteCommand addSurvival = new SQLiteCommand("INSERT INTO Skills(ID, Skill_Name, Skill_Description, Game_ID) VALUES (11, 'Survival', 'hunting, trapping, tracking, and foraging outdoors.',0)", CramDB);
-            SQLiteCommand addVocation = new SQLiteCommand("INSERT INTO Skills(ID, Skill_Name, Skill_Description, Game_ID) VALUES (12, 'Vocation', 'a specialized trade, e.g. Pilot, Soldier, or Tailor.',0)", CramDB);
-
-            //Statements to add items to the ItemsListTable
-            SQLiteCommand addHobbyKit = new SQLiteCommand("INSERT INTO Items (ID, Item_Name, Item_Description,Item_Cost, Game_ID) Values (1, 'Standard /Hobbyist Kit','The basic tools of the trade for a skill, e.g. a first aid kit (for the Medicine skill).',10,0)",CramDB); ;
-            SQLiteCommand addDeluxeKit = new SQLiteCommand("INSERT INTO Items (ID, Item_Name, Item_Description,Item_Cost, Game_ID) Values (2, 'Deluxe /Pro Kit', 'Everything in the standard kit plus specialty tools for a skill, e.g. a doctors bag (for the Medicine skill)', 100,0)", CramDB); ;
-            SQLiteCommand addMelee1 = new SQLiteCommand("INSERT INTO Items (ID, Item_Name, Item_Description,Item_Cost, Game_ID) Values (3, 'Melee +1', 'PHY +1 _or_ 5 combat dice', 5, 0)", CramDB); ;
-            SQLiteCommand addMelee2 = new SQLiteCommand("INSERT INTO Items (ID, Item_Name, Item_Description,Item_Cost, Game_ID) Values (4, 'Melee +2', 'PHY +2 _or_ 8 combat dice', 25, 0)", CramDB); ;
-            SQLiteCommand addMelee3 = new SQLiteCommand("INSERT INTO Items (ID, Item_Name, Item_Description,Item_Cost, Game_ID) Values (5, 'Melee +3', 'PHY +3 _or_ 11 combat dice', 75, 0)", CramDB); ;
-            SQLiteCommand addRanged1 = new SQLiteCommand("INSERT INTO Items (ID, Item_Name, Item_Description,Item_Cost, Game_ID) Values (6, 'Projectile +1', 'PHY +1 _or_ 5 combat dice', 50, 0)", CramDB); ;
-            SQLiteCommand addRanged2 = new SQLiteCommand("INSERT INTO Items (ID, Item_Name, Item_Description,Item_Cost, Game_ID) Values (7, 'Projectile +2', 'PHY +2 _or_ 8 combat dice', 100, 0)", CramDB); ;
-            SQLiteCommand addRanged3 = new SQLiteCommand("INSERT INTO Items (ID, Item_Name, Item_Description,Item_Cost, Game_ID) Values (8, 'Projectile +3', 'PHY +3 _or_ 11 combat dice', 250, 0)", CramDB); ;
-            SQLiteCommand addRanged4 = new SQLiteCommand("INSERT INTO Items (ID, Item_Name, Item_Description,Item_Cost, Game_ID) Values (9, 'Projectile +4', 'PHY +4 _or_ 14 combat dice', 500, 0)", CramDB); ;
-            SQLiteCommand addLightArmor = new SQLiteCommand("INSERT INTO Items (ID, Item_Name, Item_Description,Item_Cost, Game_ID) Values (10, 'Standard /Hobbyist Kit', 'Damage Reduction: 1. Reduces PHY by 1.', 50, 0)", CramDB); ;
-            SQLiteCommand addMediumArmor = new SQLiteCommand("INSERT INTO Items (ID, Item_Name, Item_Description,Item_Cost, Game_ID) Values (11, 'Medium Armor', 'Damage Reduction: 2. Reduces PHY by 2.', 300, 0)", CramDB); ;
-            SQLiteCommand addHeavyArmor = new SQLiteCommand("INSERT INTO Items (ID, Item_Name, Item_Description,Item_Cost, Game_ID) Values (12, 'Heavy Armor', 'Damage Reduction: 3. Reduces PHY by 5.', 1500,0)", CramDB); ;
-
-            //execute table creation
-            createCharacterTable.ExecuteNonQuery();            
-            createSkillListTable.ExecuteNonQuery();
-            createInventoryListTable.ExecuteNonQuery();
-            createGamesTable.ExecuteNonQuery();
-            createCharacterInventoriesTable.ExecuteNonQuery();
-            createCharacterSkillsTable.ExecuteNonQuery();
-            createGameCharactersTable.ExecuteNonQuery();
-
-            //execute commands to add skills
-            addAthletics.ExecuteNonQuery();
-            addLore.ExecuteNonQuery();
-            addMartial.ExecuteNonQuery();
-            addMedicine.ExecuteNonQuery();
-            addClairovoyance.ExecuteNonQuery();
-            addTelekinesis.ExecuteNonQuery();
-            addTelepathy.ExecuteNonQuery();
-            addRhetoric.ExecuteNonQuery();
-            addScience.ExecuteNonQuery();
-            addSubterfuge.ExecuteNonQuery();
-            addSurvival.ExecuteNonQuery();
-            addVocation.ExecuteNonQuery();
-
-            //execute commands to add items
-            addHobbyKit.ExecuteNonQuery();
-            addDeluxeKit.ExecuteNonQuery();
-            addMelee1.ExecuteNonQuery();
-            addMelee2.ExecuteNonQuery();
-            addMelee3.ExecuteNonQuery();
-            addRanged1.ExecuteNonQuery();
-            addRanged2.ExecuteNonQuery();
-            addRanged3.ExecuteNonQuery();
-            addRanged4.ExecuteNonQuery();
-            addLightArmor.ExecuteNonQuery();
-            addMediumArmor.ExecuteNonQuery();
-            addHeavyArmor.ExecuteNonQuery();
-
-            CramDB.Close();
-
-            return CramDB;
-        }
+        }       
 
         public void BetaUpdateTick()
         {
