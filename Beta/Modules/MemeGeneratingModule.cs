@@ -58,29 +58,32 @@ namespace Beta.Modules
 
                 cgb.CreateCommand("meme")
                 .Description("Generate your own meme on the fly! Examples:\n\n$meme \"Random|TopText|BottomText\n$meme YUNo|TopTextOnly\n\nSee $memelist for available Memes are just use Random!\"")
-                .Parameter("memeArgs", ParameterType.Required)
+                .Parameter("memeArgs", ParameterType.Required)                
                 .Do(async e =>
                 {
-                    List<string> args = e.GetArg("memeArgs").Split('|').ToList<string>();
-                    if(args.Count >= 2)
+                    if (Beta.CheckModuleState(e, "cram", e.Channel.IsPrivate))
                     {
-                        string memeName = args[0];
-                        if (memeName.ToLower() == "random")
+                        List<string> args = e.GetArg("memeArgs").Split('|').ToList<string>();
+                        if (args.Count >= 2)
                         {
-                            memeName = Memes.GetRandom();
-                            Console.WriteLine(memeName);
+                            string memeName = args[0];
+                            if (memeName.ToLower() == "random")
+                            {
+                                memeName = Memes.GetRandom();
+                                Console.WriteLine(memeName);
+                            }
+                            string fileName = memeFolder + memeName + DateTime.Now.ToString("hhmmss") + ".png";
+
+                            args.RemoveAt(0);
+                            Image imageWithMemeText = PlaceImageText(args, memeName, e);
+                            if (imageWithMemeText != null)
+                            {
+
+                                imageWithMemeText.Save(fileName, ImageFormat.Png);
+                                await e.Channel.SendFile(fileName);
+                            }
                         }
-                        string fileName = memeFolder + memeName + DateTime.Now.ToString("hhmmss")+".png";
-                        
-                        args.RemoveAt(0);
-                        Image imageWithMemeText = PlaceImageText(args, memeName, e);
-                        if (imageWithMemeText != null)
-                        {
-                            
-                            imageWithMemeText.Save(fileName, ImageFormat.Png);
-                            await e.Channel.SendFile(fileName);
-                        }
-                    }
+                    }                    
                 });
 
                 cgb.CreateCommand("memelist")

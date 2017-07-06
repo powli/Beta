@@ -32,7 +32,7 @@ namespace Beta.Modules
                     .Parameter("text", ParameterType.Multiple)
                     .Do(async e =>
                     {
-                        if (Beta.CheckModuleState(e, "CRAM", e.Channel.IsPrivate))
+                        if (Beta.CheckModuleState(e, "cram", e.Channel.IsPrivate))
                         {
                             
                         }
