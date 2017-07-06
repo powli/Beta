@@ -146,9 +146,12 @@ namespace Beta.Repository
 
         [XmlAttribute]
         public bool MarkovListenerEnabled { get; set; } = false;
-
+        [XmlAttribute]
         public bool BetaCanSpeak { get; set; } = true;
-        
+        [XmlAttribute]
+        public bool CramEnabled { get; set; } = false;
+        [XmlAttribute]
+        public bool MemeGenEnabled { get; set; } = false;
 
         public void EnableBetaSpeak()
         {
@@ -203,6 +206,12 @@ namespace Beta.Repository
                 case "markov":
                     MarkovListenerEnabled = !MarkovListenerEnabled;
                     return MarkovListenerEnabled;
+                case "cram":
+                    CramEnabled = !CramEnabled;
+                    return CramEnabled;
+                case "meme":
+                    MemeGenEnabled = !MemeGenEnabled;
+                    return MemeGenEnabled;
                 default:
                     return false;
             }

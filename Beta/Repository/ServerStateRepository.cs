@@ -126,7 +126,11 @@ namespace Beta.Repository
         public bool ChattyModeEnabled { get; set; } = false;
 
         [XmlAttribute]
-        public bool MarkovListenerEnabled { get; set; } = false;        
+        public bool MarkovListenerEnabled { get; set; } = false;
+        [XmlAttribute]
+        public bool CramEnabled { get; set; } = false;
+        [XmlAttribute]
+        public bool MemeGenEnabled { get; set; } = false;
 
         public bool ToggleFeatureBool(string module)
         {
@@ -170,7 +174,13 @@ namespace Beta.Repository
                     return ChattyModeEnabled;
                 case "markov":
                     MarkovListenerEnabled = !MarkovListenerEnabled;
-                    return MarkovListenerEnabled;     
+                    return MarkovListenerEnabled;
+                case "meme":
+                    MemeGenEnabled = !MemeGenEnabled;
+                    return MemeGenEnabled;
+                case "cram":
+                    CramEnabled = !CramEnabled;
+                    return CramEnabled;
                 default:
                     return false;
             }

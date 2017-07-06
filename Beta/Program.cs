@@ -653,6 +653,10 @@ namespace Beta
                     return (srvr.ChattyModeEnabled || chnl.ChattyModeEnabled);
                 case "markov":
                     return (srvr.MarkovListenerEnabled || chnl.MarkovListenerEnabled);
+                case "cram":
+                    return (srvr.CramEnabled || chnl.CramEnabled);
+                case "meme":
+                    return (srvr.MemeGenEnabled || chnl.MemeGenEnabled);
                 default:
                     return false;
             }
