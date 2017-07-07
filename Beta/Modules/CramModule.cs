@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using Beta.Cram;
+using Discord;
 using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
@@ -34,9 +35,9 @@ namespace Beta.Modules
                     {
                         if (Beta.CheckModuleState(e, "cram", e.Channel.IsPrivate))
                         {
-                            if (!(e.Args.Count() < 5))
+                            if (!(e.Args.Count() == 5))
                             {
-                                await e.Channel.SendMessage("Sorry, doesn't look like you've provided enough arguments.");
+                                await e.Channel.SendMessage("Sorry, doesn't look like you've provided the right number of arguments.");
                             }
                             else
                             {
@@ -62,6 +63,7 @@ namespace Beta.Modules
                                 {                                    
                                     if (ValidateScores(phy, men, vit, luc))
                                     {
+                                        CramManager.AddNewCharacter(name, phy, men, vit, luc, e.User.Id);
                                         await e.Channel.SendMessage("Ok, I've added that character for you!");
                                     }
                                     else
@@ -73,6 +75,17 @@ namespace Beta.Modules
                             }
                             
                         }
+                    });
+
+                cgb.CreateCommand("listchars")
+                    .Description("Lists all of your characters accross all games.")
+                    .Do(async e =>
+                    {
+                        string msg = "Character List\n";
+                        msg += "Character Name | PHY | MEN | VIT | LUC | Cash | Skill Points|";
+                        msg += CramManager.GetCharacters(e.User.Id.ToString());
+                        await e.Channel.SendMessage(msg);
+
                     });
 
 

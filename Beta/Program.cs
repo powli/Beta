@@ -336,6 +336,7 @@ namespace Beta
             _client.AddModule<NoteModule>("Note", ModuleFilter.None);
             _client.AddModule<ChatBattleModule>("Chat Battle", ModuleFilter.None);
             _client.AddModule<MemeGeneratingModule>("Memes", ModuleFilter.None);
+            _client.AddModule<CramModule>("CRAM RPG", ModuleFilter.None);            
 
             _client.ExecuteAndWait(async () =>
             {

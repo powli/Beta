@@ -61,7 +61,7 @@ namespace Beta.Modules
                 .Parameter("memeArgs", ParameterType.Required)                
                 .Do(async e =>
                 {
-                    if (Beta.CheckModuleState(e, "cram", e.Channel.IsPrivate))
+                    if (Beta.CheckModuleState(e, "meme", e.Channel.IsPrivate))
                     {
                         List<string> args = e.GetArg("memeArgs").Split('|').ToList<string>();
                         if (args.Count >= 2)

@@ -87,6 +87,24 @@ namespace Beta.Cram
         {
 
         }
+
+        internal static string GetCharacters(string id)
+        {
+            string msg = "\n";
+            using(CharacterContext db = new CharacterContext())
+            {
+                List<Character> chars = db.Characters.ToList<Character>();
+                foreach (Character chr in chars)
+                {
+                    if (chr.UserId == id)
+                    {
+                        msg += chr.Name + " | " + chr.PHY + " | " + chr.MEN + " | " + chr.VIT + " | " + chr.LUC + " | " + chr.Cash + " | " + chr.SkillPoints;
+                    }
+                }
+            }
+            return msg;
+            
+        }
     }
 
     

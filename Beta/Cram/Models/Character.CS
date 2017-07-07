@@ -21,7 +21,7 @@ namespace Beta.Cram.Models
         public int LUC { get; set; }
         public double Cash { get; set; }
         public int SkillPoints { get; set; }
-        public ulong OwnerId { get; set; }
+        public string UserId { get; set; }
 
         public virtual List<CharacterItem> CharacterItems { get; set; }
 
@@ -38,7 +38,7 @@ namespace Beta.Cram.Models
             SkillPoints = sp;
             CharacterItems = new List<CharacterItem>();
             CharacterSkills = new List<CharacterSkill>();
-            OwnerId = userId;
+            UserId = userId.ToString();
         }
         public Character()
         {
