@@ -149,13 +149,14 @@ namespace Beta.Modules
                                 using (CharacterContext db = new CharacterContext())
                                 {
                                     Item item = db.Items.FirstOrDefault(i => i.ItemID == itemId);
+                                    db.Detach(item);
                                     if (item != null)
                                     {
                                         Character selectedCharacter = db.Characters.FirstOrDefault(c => c.CharacterID == usr.SelectedCharacter);
                                         if (selectedCharacter.Cash >= item.ItemCost)
                                         {
                                             selectedCharacter.Cash -= item.ItemCost;
-                                            selectedCharacter.AddItem(item, 1);
+                                            selectedCharacter.AddItem(item, 1);                                            
                                             await e.Channel.SendMessage("Ok cool, thanks for the cash! I've added " + item.ItemName + " to your inventory!");
                                             db.SaveChanges();
                                         }
