@@ -55,9 +55,12 @@ namespace Beta.Cram.Models
                 CharacterItem charItem = db.CharacterItems.FirstOrDefault(ci => ci.ItemParentID == item.ItemID && ci.CharacterId == CharacterID);                
                 if (charItem != null)
                 {
-                    //Do nothing for now.
+                    charItem.QuantityOwned += quantity;
+                    db.Entry(charItem).State = System.DataMisalignedException.Entity.EntityState.Modified;
                 }
                 else CharacterItems.Add(new CharacterItem(item, quantity, CharacterID));
+
+                db.SaveCHanges();
             }
             
 
