@@ -105,6 +105,35 @@ namespace Beta.Cram
             return msg;
             
         }
+
+        internal static string GetSkills()
+        {
+            string msg = "\n";
+            using (CharacterContext db = new CharacterContext())
+            {
+                List<Skill> skills = db.Skills.ToList<Skill>();
+                foreach(Skill skill in skills)
+                {
+                    msg += skill.SkillDescription + " | " + skill.SkillName + " | " + skill.SkillDescription + "\n";
+                }
+
+            }
+            return msg;
+        }
+
+        internal static string GetItems()
+        {
+            string msg = "\n";
+            using (CharacterContext db = new CharacterContext())
+            {
+                List<Item> items = db.Items.ToList<Item>();
+                foreach (Item item in items)
+                {                                       
+                    msg += item.ItemID + " | " + item.ItemName + " | " + item.ItemDescription + " | " + item.ItemCost + "\n";                    
+                }
+            }
+            return msg;
+        }
     }
 
     

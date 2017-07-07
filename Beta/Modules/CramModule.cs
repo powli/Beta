@@ -83,12 +83,31 @@ namespace Beta.Modules
                     .Do(async e =>
                     {
                         string msg = "Character List\n";
-                        msg += "Character Name | PHY | MEN | VIT | LUC | Cash | Skill Points|";
+                        msg += "Character Name | PHY | MEN | VIT | LUC | Cash | Skill Points\n";
                         msg += CramManager.GetCharacters(e.User.Id.ToString());
                         await e.Channel.SendMessage(msg);
 
                     });
 
+                cgb.CreateCommand("listskills")
+                    .Description("Lists the generic list of skills.")
+                    .Do(async e =>
+                    {
+                        string msg = "Skill List\n";
+                        msg += "Skill ID | Skill Name | Skill Description\n";
+                        msg += CramManager.GetSkills();
+                        await e.Channel.SendMessage(msg);
+                    });
+
+                cgb.CreateCommand("listitems")
+                    .Description("Lists the generic list of items..")
+                    .Do(async e =>
+                    {
+                        string msg = "Item List\n";
+                        msg += "Item ID | Item Name | Item Description | Item Cost\n";
+                        msg += CramManager.GetItems();
+                        await e.Channel.SendMessage(msg);
+                    });
 
             });
         }
