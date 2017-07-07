@@ -122,12 +122,25 @@ namespace Beta.Modules
                     
                 });
 
+                cgb.CreateCommand("selectedchar")
+                .Description("Shows the currently selected character, if any.")
+                .Do(async e =>
+                {
+                    UserState usr = Beta.UserStateRepository.GetUserState(e.User.Id);
+                    if (usr.SelectedCharacter != 0)
+                    {
+                        await e.Channel.SendMessage(usr.SelectedCharacter + " | "+usr.SelectedCharacterName);
+                    }
+                    else await e.Channel.SendMessage("Looks like you don't actually have a character selected, buddy.");
+                    
+                });
+
                 cgb.CreateCommand("buy")
                     .Description("Purchase an item. Provide the iteam id found from the 'listitems' command. Example: \n\n$buy 3.")
                     .Parameter("id", ParameterType.Required)
                     .Do(async e =>
                     {
-                        await e.Channel.SendMessage("Good Deal! I've added that item to your inventory.");
+                        await e.Channel.SendMessage("Good Deal! I've added that item to your inventory. Except I really didn't because Dart was too lazy to implment this fully yet. GG.");
                     });
 
                 cgb.CreateCommand("inv")
