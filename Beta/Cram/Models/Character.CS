@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
+using System.Data.Entity.Migrations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -49,14 +50,16 @@ namespace Beta.Cram.Models
         //Adds the item to the character,
         public void AddItem(Item item, int quantity)
         {
-            if (this.CharacterItems.FirstOrDefault(i => i.ItemParentID == item.ItemID) != null)
+            using (CharacterContext db = new CharacterContext())
             {
-                CharacterItems.FirstOrDefault(i => i.ItemParentID == item.ItemID).QuantityOwned += quantity;
+                CharacterItem charItem = db.CharacterItems.FirstOrDefault(ci => ci.ItemParentID == item.ItemID && ci.CharacterId == CharacterID);                
+                if (charItem != null)
+                {
+                    //Do nothing for now.
+                }
+                else CharacterItems.Add(new CharacterItem(item, quantity, CharacterID));
             }
-            else
-            {
-                CharacterItems.Add(new CharacterItem(item, quantity, CharacterID));
-            }
+            
 
         }
     

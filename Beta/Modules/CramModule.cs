@@ -100,7 +100,7 @@ namespace Beta.Modules
                     string characterName = "";
                     if (Int32.TryParse(e.GetArg("id"), out charId))
                     {
-                        using (CharacterContext db = new CharacterContext)
+                        using (CharacterContext db = new CharacterContext())
                         {
                             Character selectedChar = db.Characters.FirstOrDefault(chr => chr.CharacterID == charId);
                             if (selectedChar != null)
@@ -140,10 +140,36 @@ namespace Beta.Modules
                     .Parameter("id", ParameterType.Required)
                     .Do(async e =>
                     {
-                        await e.Channel.SendMessage("Good Deal! I've added that item to your inventory. Except I really didn't because Dart was too lazy to implment this fully yet. GG.");
+                        UserState usr = Beta.UserStateRepository.GetUserState(e.User.Id);
+                        if (usr.SelectedCharacter != 0)
+                        {
+                            int itemId;
+                            if (Int32.TryParse(e.GetArg("id"), out itemId))
+                            {
+                                using (CharacterContext db = new CharacterContext())
+                                {
+                                    Item item = db.Items.FirstOrDefault(i => i.ItemID == itemId);
+                                    if (item != null)
+                                    {
+                                        Character selectedCharacter = db.Characters.FirstOrDefault(c => c.CharacterID == usr.SelectedCharacter);
+                                        if (selectedCharacter.Cash >= item.ItemCost)
+                                        {
+                                            selectedCharacter.Cash -= item.ItemCost;
+                                            selectedCharacter.AddItem(item, 1);
+                                            await e.Channel.SendMessage("Ok cool, thanks for the cash! I've added " + item.ItemName + " to your inventory!");
+                                            db.SaveChanges();
+                                        }
+                                        else await e.Channel.SendMessage("Sorry pal, you don't have enough cash.");
+                                    }
+                                    else await e.Channel.SendMessage("Sorry, I don't see that item. You should check the 'listitems' command again to verify the ID!");
+                                }
+                            }
+                            else await e.Channel.SendMessage("That's not a digit, my dude!");
+                        }
+                        else await e.Channel.SendMessage("Looks like you don't actually have a character selected, buddy.");
                     });
 
-                cgb.CreateCommand("inv")
+                cgb.CreateCommand("craminv")
                     .Description("Lists the items in your inventory.")
                     .Do(async e =>
                     {
