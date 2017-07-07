@@ -1,4 +1,5 @@
 ﻿using Beta.Cram;
+using Beta.Repository;
 using Discord;
 using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
@@ -100,10 +101,15 @@ namespace Beta.Modules
                     .Description("Lists the items in your inventory.")
                     .Do(async e =>
                     {
-                        string msg = "Inventory\n";
-                        msg += "Item ID | Item Name | Item Description | Item Cost | Quantity";
-                        msg += CramManager.GetCharacterItems();
-                        await e.Channel.SendMessage(msg);
+                        UserState usrState = Beta.UserStateRepository.GetUserState(e.User.Id);
+                        if (usrState.SelectedCharacter != 0)
+                        {
+                            string msg = usrState.SelectedCharacterName+"'s Inventory\n";
+                            msg += "Item ID | Item Name | Item Description | Item Cost | Quantity";
+                            msg += CramManager.GetCharacterItems(usrState.SelectedCharacter);
+                            await e.Channel.SendMessage(msg);
+                        }
+                        
                     });
 
                 cgb.CreateCommand("listskills")

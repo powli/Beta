@@ -578,13 +578,13 @@ namespace Beta.Repository
         public List<KappaViolation> KappaViolations {get; set;} = new List<KappaViolation>();
 
         [XmlAttribute]
-        public int SelectedCharacter { get; set; }
+        public int SelectedCharacter { get; set; } = 0;
 
         [XmlAttribute]
-        public int SelectedGameCharacter { get; set; }
+        public int SelectedGameCharacter { get; set; } = 0;
 
         [XmlAttribute]
-        public int SelectedGame { get; set; }
+        public int SelectedGame { get; set; } = 0;
 
         [XmlAttribute]
         public string SelectedCharacterName { get; set; }

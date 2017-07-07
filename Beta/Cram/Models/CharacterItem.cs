@@ -16,6 +16,9 @@ namespace Beta.Cram.Models
         public int ItemParentID { get; set; }
         public int QuantityOwned { get; set; }        
 
+        public int CharacterId { get; set; }
+        [ForeignKey("CharacterId")]
+        public virtual Character character { get; set; }
         public CharacterItem(Item item, int quantity, int charID):base(item)
         {
             ItemParentID = item.ItemID;

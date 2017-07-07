@@ -134,6 +134,23 @@ namespace Beta.Cram
             }
             return msg;
         }
+
+        internal static string GetCharacterItems(int selectedCharacter)
+        {
+            string msg = "\n";
+            using (CharacterContext db = new CharacterContext())
+            {
+                List<CharacterItem> items = db.CharacterItems.ToList<CharacterItem>();
+                foreach (CharacterItem item in items)
+                {
+                    if(item.CharacterId == selectedCharacter)
+                    {
+                        msg += item.ItemID + " | " + item.ItemName + " | " + item.ItemDescription + " | " + item.ItemCost + " | " + item.QuantityOwned + "\n";
+                    }
+                }
+            }
+            return msg;
+        }
     }
 
     
