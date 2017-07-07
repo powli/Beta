@@ -79,6 +79,7 @@ namespace Beta.Modules
 
                 cgb.CreateCommand("listchars")
                     .Description("Lists all of your characters accross all games.")
+                    .Alias("listchar")
                     .Do(async e =>
                     {
                         string msg = "Character List\n";
