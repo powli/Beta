@@ -114,7 +114,7 @@ namespace Beta.Cram
                 List<Skill> skills = db.Skills.ToList<Skill>();
                 foreach(Skill skill in skills)
                 {
-                    msg += skill.SkillDescription + " | " + skill.SkillName + " | " + skill.SkillDescription + "\n";
+                    msg += skill.SkillID + " | " + skill.SkillName + " | " + skill.SkillDescription + "\n";
                 }
 
             }

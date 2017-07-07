@@ -88,6 +88,23 @@ namespace Beta.Modules
                         await e.Channel.SendMessage(msg);
 
                     });
+                cgb.CreateCommand("buy")
+                    .Description("Purchase an item. Provide the iteam id found from the 'listitems' command. Example: \n\n$buy 3.")
+                    .Parameter("id", ParameterType.Required)
+                    .Do(async e =>
+                    {
+                        await e.Channel.SendMessage("Good Deal! I've added that item to your inventory.");
+                    });
+
+                cgb.CreateCommand("inv")
+                    .Description("Lists the items in your inventory.")
+                    .Do(async e =>
+                    {
+                        string msg = "Inventory\n";
+                        msg += "Item ID | Item Name | Item Description | Item Cost | Quantity";
+                        msg += CramManager.GetCharacterItems();
+                        await e.Channel.SendMessage(msg);
+                    });
 
                 cgb.CreateCommand("listskills")
                     .Description("Lists the generic list of skills.")

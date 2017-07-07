@@ -576,7 +576,25 @@ namespace Beta.Repository
 
         [XmlArrayItem("KappaViolations")]
         public List<KappaViolation> KappaViolations {get; set;} = new List<KappaViolation>();
-#endregion
+
+        [XmlAttribute]
+        public int SelectedCharacter { get; set; }
+
+        [XmlAttribute]
+        public int SelectedGameCharacter { get; set; }
+
+        [XmlAttribute]
+        public int SelectedGame { get; set; }
+
+        [XmlAttribute]
+        public string SelectedCharacterName { get; set; }
+
+        [XmlAttribute]
+        public string SelectedGameCharacterName { get; set; }
+
+        [XmlAttribute]
+        public string SelectedGameName { get; set; }
+        #endregion
 
         public void AddKappaViolation()
         {
