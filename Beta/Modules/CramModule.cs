@@ -1,4 +1,5 @@
 ﻿using Beta.Cram;
+using Beta.Cram.Models;
 using Beta.Repository;
 using Discord;
 using Discord.Commands;
@@ -89,6 +90,38 @@ namespace Beta.Modules
                         await e.Channel.SendMessage(msg);
 
                     });
+
+                cgb.CreateCommand("selectchar")
+                .Description("Select one of your characters by ID. You can check 'listchars' to get the ID. Example: \n\n$selectchar 2.")
+                .Parameter("id", ParameterType.Required)
+                .Do(async e =>
+                {
+                    int charId;
+                    string characterName = "";
+                    if (Int32.TryParse(e.GetArg("id"), out charId))
+                    {
+                        using (CharacterContext db = new CharacterContext)
+                        {
+                            Character selectedChar = db.Characters.FirstOrDefault(chr => chr.CharacterID == charId);
+                            if (selectedChar != null)
+                            {
+                                if (selectedChar.UserId == e.User.Id.ToString())
+                                {
+                                    characterName = selectedChar.Name;
+                                    UserState usr = Beta.UserStateRepository.GetUserState(e.User.Id);
+                                    usr.SelectedCharacter = charId;
+                                    usr.SelectedCharacterName = characterName;
+                                    await e.Channel.SendMessage("Awesome, I selected " + characterName + "!");
+                                }
+                                else await e.Channel.SendMessage("Hey! THAT ISN'T YOUR CHARACTER!");
+                            }
+                            else await e.Channel.SendMessage("Sorry, I don't see a character with that ID...");
+                        }
+                    }
+                    else await e.Channel.SendMessage("That's not a digit, my dude.");
+                    
+                });
+
                 cgb.CreateCommand("buy")
                     .Description("Purchase an item. Provide the iteam id found from the 'listitems' command. Example: \n\n$buy 3.")
                     .Parameter("id", ParameterType.Required)
