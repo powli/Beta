@@ -52,13 +52,13 @@ namespace Beta.Cram.Models
         {
             using (CharacterContext db = new CharacterContext())
             {
-                CharacterItem charItem = db.CharacterItems.FirstOrDefault(ci => ci.ItemParentID == item.ItemID && ci.CharacterId == CharacterID);                
+                /*CharacterItem charItem = db.CharacterItems.FirstOrDefault(ci => ci.ItemParentID == item.ItemID && ci.CharacterId == CharacterID);                
                 if (charItem != null)
                 {
                     charItem.QuantityOwned += quantity;
                     db.Entry(charItem).State = System.Data.Entity.EntityState.Modified;
                 }
-                else CharacterItems.Add(new CharacterItem(item, quantity, CharacterID));
+                else*/ CharacterItems.Add(new CharacterItem(item, quantity, CharacterID));
 
                 db.SaveChanges();
             }
