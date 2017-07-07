@@ -83,7 +83,7 @@ namespace Beta.Modules
                     .Do(async e =>
                     {
                         string msg = "Character List\n";
-                        msg += "Character Name | PHY | MEN | VIT | LUC | Cash | Skill Points\n";
+                        msg += "Character ID | Character Name | PHY | MEN | VIT | LUC | Cash | Skill Points\n";
                         msg += CramManager.GetCharacters(e.User.Id.ToString());
                         await e.Channel.SendMessage(msg);
 

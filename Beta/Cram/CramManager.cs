@@ -98,7 +98,7 @@ namespace Beta.Cram
                 {
                     if (chr.UserId == id)
                     {
-                        msg += chr.Name + " | " + chr.PHY + " | " + chr.MEN + " | " + chr.VIT + " | " + chr.LUC + " | " + chr.Cash + " | " + chr.SkillPoints +"\n";
+                        msg += chr.CharacterID+" | "+ chr.Name + " | " + chr.PHY + " | " + chr.MEN + " | " + chr.VIT + " | " + chr.LUC + " | " + chr.Cash + " | " + chr.SkillPoints +"\n";
                     }
                 }
             }
