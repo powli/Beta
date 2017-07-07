@@ -56,11 +56,11 @@ namespace Beta.Cram.Models
                 if (charItem != null)
                 {
                     charItem.QuantityOwned += quantity;
-                    db.Entry(charItem).State = System.DataMisalignedException.Entity.EntityState.Modified;
+                    db.Entry(charItem).State = System.Data.Entity.EntityState.Modified;
                 }
                 else CharacterItems.Add(new CharacterItem(item, quantity, CharacterID));
 
-                db.SaveCHanges();
+                db.SaveChanges();
             }
             
 
