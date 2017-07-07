@@ -63,6 +63,30 @@ namespace Beta.Cram
                 new Skill("Vocation","a specialized trade, e.g. Pilot, Soldier, or Tailor.")
             };        
         }
+
+        internal static void AddNewCharacter(string name, int phy, int men, int vit, int luc, ulong userId)
+        {
+            using(CharacterContext db = new CharacterContext())
+            {
+                db.Characters.Add(new Character(name, phy, men, vit, luc, 2, userId));
+                db.SaveChanges();
+            }
+        }
+
+        internal static void AddNewGameCharacter(string name, int phy, int men, int vit, int luc, ulong userId, int gameId)
+        {
+            using(GameContext db = new GameContext())
+            {
+                Game game = db.Games.Find(gameId);
+                game.Characters.Add(new Character(name, phy, men, vit, luc, 2, userId));
+                db.SaveChanges();
+            }
+        }
+
+        internal static void AddExistingGameCharacter(int characterId, int gameId)
+        {
+
+        }
     }
 
     

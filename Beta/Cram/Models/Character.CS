@@ -21,13 +21,13 @@ namespace Beta.Cram.Models
         public int LUC { get; set; }
         public double Cash { get; set; }
         public int SkillPoints { get; set; }
-        public Guid OwnerGUID { get; set; }
+        public ulong OwnerId { get; set; }
 
         public virtual List<CharacterItem> CharacterItems { get; set; }
 
         public virtual List<CharacterSkill> CharacterSkills { get; set; }
 
-        public Character (string name, int phy, int men, int vit, int luc, int sp, Guid guid)
+        public Character (string name, int phy, int men, int vit, int luc, int sp, ulong userId)
         {
             Name = name;
             PHY = phy;
@@ -38,7 +38,7 @@ namespace Beta.Cram.Models
             SkillPoints = sp;
             CharacterItems = new List<CharacterItem>();
             CharacterSkills = new List<CharacterSkill>();
-            OwnerGUID = guid;
+            OwnerId = userId;
         }
         public Character()
         {

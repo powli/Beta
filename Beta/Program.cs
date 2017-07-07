@@ -363,19 +363,10 @@ namespace Beta
 
                 using (var db = new CharacterContext())
                 {
-                    CramManager.InitializeCharacterDatabase();   
-                    Character character = db.Characters.Find(1);                    
-                    while(character == null)
+                    if (!(db.Items.ToList<Item>().Count > 1))
                     {
-                        db.Characters.Add(new Character("Joe", 5, 5, 5, 5, 2, new Guid()));
-                        db.SaveChanges();
-                        character = db.Characters.Find(1);
-                    }
-                    character.AddItem(new Item("Item", "An Item", 5.00),1);
-                    character.AddItem(character.CharacterItems[0], 7);
-                    List<Item> items = CramManager.GenerateNewItemList();
-                    List<Skill> Skills = CramManager.GenerateNewSkillList();
-                    db.SaveChanges();
+                        CramManager.InitializeCharacterDatabase();
+                    }                    
                 }                
 
                 UserStateRepository.AddUser("Beta","beta");
