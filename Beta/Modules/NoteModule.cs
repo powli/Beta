@@ -5,6 +5,7 @@ using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Beta.Repository;
+using Beta.Utils;
 
 namespace Beta.Modules
 {
@@ -33,10 +34,17 @@ namespace Beta.Modules
                         NoteRepository noteRepository =
                             Beta.ServerStateRepository.GetServerState(e.Server.Id).NoteRepository;
                         Note note = noteRepository.GetNote(e.GetArg("name"));
-                        if (note != null) await e.Channel.SendMessage(note.Text);
+                        if (note != null)
+                        {
+                            await e.Channel.SendMessage(note.Text);
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
+                        }
                         else
+                        {
                             await e.Channel.SendMessage("Sorry, I don't see a server note by the name of '" + e.GetArg("name") +
-                                                  "'.");
+                                                  "', " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
+                        }
 
 
                     }
@@ -73,16 +81,21 @@ namespace Beta.Modules
                             Beta.ServerStateRepository.GetServerState(e.Server.Id)
                                 .NoteRepository.NoteExists(e.GetArg("text")))
                         {
-                            await e.Channel.SendMessage("Ok, deleted that note for you! Bye bye '"+e.GetArg("text")+"'.");
+                            await e.Channel.SendMessage("Ok, deleted that note for you, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + "! Bye bye '" + e.GetArg("text")+ "'.");
 
                             Beta.ServerStateRepository.GetServerState(e.Server.Id)
                                 .NoteRepository.DeleteQuote(e.GetArg("text"));
                             Beta.ServerStateRepository.Save();
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                         }
                         else
+                        {
                             await
                                 e.Channel.SendMessage("Sorry, I was unable to find a note named '" + e.GetArg("text") +
-                                                      "'.");
+                                                      "', " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
+                        }
+                            
                     }
                 });
                
@@ -102,7 +115,8 @@ namespace Beta.Modules
                         {                            
                             await
                                 e.Channel.SendMessage("Sorry, looks like we already have a note named '" + args[0] +
-                                                      "' on this server.");
+                                                      "' on this server, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                         }
                         else
                         {
@@ -110,9 +124,9 @@ namespace Beta.Modules
                                 .NoteRepository.AddNote(args[0], args[1], e.User.Name);
 
                             await
-                                e.Channel.SendMessage(String.Format("Successfully added note '{0}', dawg.",
+                                e.Channel.SendMessage(String.Format("Successfully added note '{0}', " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".",
                                     args[0]));
-
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                             Beta.ServerStateRepository.Save();
 
                         }                        
