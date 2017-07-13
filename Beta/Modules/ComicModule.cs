@@ -10,6 +10,7 @@ using Beta.Utils;
 using Beta.JSONConfig;
 using Newtonsoft.Json;
 using System.Net;
+using Beta.Repository;
 
 public class XKCDComic
 {
@@ -58,6 +59,7 @@ namespace Beta.Modules
                             XKCDComic comic = _download_serialized_json_data<XKCDComic>("http://xkcd.com/info.0.json");
                             await e.Channel.SendMessage(comic.img);
                             await e.Channel.SendMessage(comic.alt);
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                         }
                         else if (e.GetArg("comic") == "rnd")
                         {
@@ -68,6 +70,7 @@ namespace Beta.Modules
                             comic = _download_serialized_json_data<XKCDComic>(url);
                             await e.Channel.SendMessage(comic.img);
                             await e.Channel.SendMessage(comic.alt);
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                         }
                         else
                         {
@@ -78,10 +81,12 @@ namespace Beta.Modules
                                 XKCDComic comic = _download_serialized_json_data<XKCDComic>(url);
                                 await e.Channel.SendMessage(comic.img);
                                 await e.Channel.SendMessage(comic.alt);
+                                Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                             }
                             else
                             {
-                                await e.Channel.SendMessage("uh... sorry, but that doesn't look like a number dude.");
+                                await e.Channel.SendMessage("uh... sorry, but that doesn't look like a number " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
+                                Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                             }
 
                         }
