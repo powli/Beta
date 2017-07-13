@@ -71,6 +71,7 @@ namespace Beta.Modules
                             {
                                 memeName = Memes.GetRandom();
                                 Console.WriteLine(memeName);
+                                Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                             }
                             string fileName = memeFolder + memeName + DateTime.Now.ToString("hhmmss") + ".png";
 
@@ -81,8 +82,10 @@ namespace Beta.Modules
 
                                 imageWithMemeText.Save(fileName, ImageFormat.Png);
                                 await e.Channel.SendFile(fileName);
+                                Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                             }
                         }
+                        else Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                     }                    
                 });
 
@@ -117,10 +120,12 @@ namespace Beta.Modules
                         }
                         catch
                         {
-                            await e.Channel.SendMessage("Sorry, I wasn't able to download that image. Check your link out, my dude.");
+                            await e.Channel.SendMessage("Sorry, I wasn't able to download that image. Check your link out, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                         }
                     }
-                    await e.Channel.SendMessage("Ok, I've added that Memeplate for you!");
+                    await e.Channel.SendMessage("Ok, I've added that Memeplate for you, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + "!");
+                    Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                 });
             });
         }
@@ -141,7 +146,7 @@ namespace Beta.Modules
             }
             else
             {
-                e.Channel.SendMessage("Sorry, I didn't see that meme. Please check the spelling!");                
+                e.Channel.SendMessage("Sorry, I didn't see that meme. Please check the spelling, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + "!");                
             }
 
             return img;
