@@ -536,7 +536,7 @@ namespace Beta.Repository
         public int TableFlipPoints { get; set; }
 
         [XmlAttribute]
-        public int BetaAbusePoints { get; set; }
+        public double Favorability { get; set; } = 0;
 
         [XmlAttribute]
         public int RPGMaxHP { get; set; }
