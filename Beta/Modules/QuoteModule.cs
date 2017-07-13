@@ -7,6 +7,7 @@ using Discord;
 using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
+using Beta.Utils;
 
 namespace Beta.Modules
 {
@@ -43,6 +44,7 @@ namespace Beta.Modules
                         if (author == null)
                         {
                             await e.Channel.SendMessage("Could not find author: '" + e.GetArg("Speaker") + "'");
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                         }
                         
                         else
@@ -50,6 +52,7 @@ namespace Beta.Modules
                             string reply = string.Format(_QuoteFormat,
                                 ReplaceVariables(author.Quotes.GetRandom().Text, e.Message.User.Name), author.Name);
                             await e.Channel.SendMessage(reply);
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                         }
 
                     }
@@ -99,7 +102,8 @@ namespace Beta.Modules
 
                             if (existingAuthor == null)
                             {
-                                await e.Channel.SendMessage("Sorry, I don't recognize that author.");
+                                await e.Channel.SendMessage("Sorry, I don't recognize that author, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
+                                Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                             }
                             else
                             {
@@ -110,11 +114,17 @@ namespace Beta.Modules
                                     await
                                         e.Channel.SendMessage("Looks like we're actually out of quotes for " +
                                                               existingAuthor +
-                                                              " so I'll remove it from the list as well.");
+                                                              " so I'll remove it from the list as well, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
+                                    Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                                 }
                             }
                         }
-                        else await e.Channel.SendMessage("Sorry, but that doesn't look like a number to me.");
+                        else
+                        {
+                            await e.Channel.SendMessage("Sorry, but that doesn't look like a number to me, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
+                        }
+
                     }
                 });
 
@@ -170,13 +180,15 @@ namespace Beta.Modules
                         {
                             await
                                 e.Channel.SendMessage(String.Format(
-                                    "Successfully added another quote from '{0}', dawg.", existingAuthor.Name));
+                                    "Successfully added another quote from '{0}', " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + "", existingAuthor.Name));
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                         }
                         else
                         {
                             await
-                                e.Channel.SendMessage(String.Format("Successfully added quote from '{0}', dawg.",
+                                e.Channel.SendMessage(String.Format("Successfully added quote from '{0}', " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".",
                                     args[0]));
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                         }
 
                         // Save after every add
