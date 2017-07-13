@@ -22,7 +22,7 @@ namespace Beta.Utils
             return _random.Next(1, this.Sides+1);
         }
 
-        public Result Roll (int times)
+        public DiceResult Roll (int times)
         {
             List<int> temp = new List<int>();
             while (times > 0)
@@ -30,16 +30,16 @@ namespace Beta.Utils
                 temp.Add(this.Roll());
                 times--;
             }
-            return new Result(temp);
+            return new DiceResult(temp);
         }
     };
 
-    public struct Result
+    public struct DiceResult
     {
         public int Total { get; set; }
         public List<int> Rolls { get; set; }
 
-        public Result(List<int> rolls)
+        public DiceResult(List<int> rolls)
         {
             Rolls = rolls;
             Total = 0;

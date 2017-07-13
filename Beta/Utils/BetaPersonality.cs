@@ -29,7 +29,7 @@ namespace Beta.Utils
             else if (Favorability > 150) return FriendlyNicknames.GetRandom();
             else if (Favorability < -500) return VeryUnfriendlyNicknames.GetRandom();
             else if (Favorability < -150) return FriendlyNicknames.GetRandom();
-            else return "";
+            else return "Human";
         }
     }
 }

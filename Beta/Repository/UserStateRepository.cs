@@ -90,7 +90,7 @@ namespace Beta.Repository
                     UserId = usr.Id,
                     UserName = usr.Name,
                     TableFlipPoints = 0,
-                    BetaAbusePoints = 0,
+                    Favorability = 0,
                     RPGMaxHP = (int)25 + r.Next(1, 25),
                     RPGGold = r.Next(1, 25),
                     RPGLevel = 1,
@@ -120,7 +120,7 @@ namespace Beta.Repository
                             UserName = "Beta",
                             RPGLevel = level,
                             TableFlipPoints = 0,
-                            BetaAbusePoints = 0,
+                            Favorability = 0,
                             IsImmortal = true,
                             CanRun = false,
                             RPGMaxHP = level * (25 + r.Next(1, 25)),
@@ -138,7 +138,6 @@ namespace Beta.Repository
                             UserName = name,
                             RPGLevel = level,
                             TableFlipPoints = 0,
-                            BetaAbusePoints = 0,
                             IsImmortal = true,
                             CanRun = false,
                             RPGMaxHP = hp,
@@ -157,7 +156,6 @@ namespace Beta.Repository
                             UserName = name,
                             RPGLevel = level,
                             TableFlipPoints = 0,
-                            BetaAbusePoints = 0,
                             IsImmortal = false,
                             CanRun = true,
                             RPGMaxHP = hp,
@@ -187,11 +185,11 @@ namespace Beta.Repository
             return GetUserState(UsrId).TableFlipPoints;
         }
 
-        internal int IncrementBetaAbusePoints(ulong UsrId, int Points)
+        internal double ModifyUserFavorability(ulong UsrId, double Amount)
         {
-            UserStates.FirstOrDefault(us => us.UserId == UsrId).BetaAbusePoints += Points;
+            UserStates.FirstOrDefault(us => us.UserId == UsrId).Favorability += Amount;
             Save();
-            return GetUserState(UsrId).BetaAbusePoints;
+            return GetUserState(UsrId).Favorability;
         }
 
         public UserState GetUserState(ulong id)

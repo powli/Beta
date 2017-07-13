@@ -234,7 +234,7 @@ namespace Beta
                                 }
                                 else
                                 {
-                                    msg = "I'm sorry, it looks like I'm unable to generate a sentence at this time.";
+                                    msg = "I'm sorry, it looks like I'm unable to generate a sentence at this time, " + Nicknames.GetNickname(UserStateRepository.GetUserState(e.User.Id).Favorability) + ".";
                                 }
                                 msgNotSet = false;
                             }
@@ -803,9 +803,9 @@ namespace Beta
             }
             else if (e.ErrorType == CommandErrorType.BadPermissions)
             {
-                if (e.Exception?.Message == "This module is currently disabled.")
+                if (e.Exception?.Message == "This module is currently disabled, " + Nicknames.GetNickname(UserStateRepository.GetUserState(e.User.Id).Favorability) + ".")
                 {
-                    await e.Channel.SendMessage($"The `{e.Command?.Category}` module is currently disabled.");
+                    await e.Channel.SendMessage($"The `{e.Command?.Category}` module is currently disabled, " + Nicknames.GetNickname(UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
                     return;
                 }
                 else if (e.Exception != null)
@@ -817,15 +817,15 @@ namespace Beta
                 if (e.Command?.IsHidden == true)
                     return;
 
-                await e.Channel.SendMessage($"You don't have permission to access that command!");
+                await e.Channel.SendMessage($"You don't have permission to access that command, "+Nicknames.GetNickname(UserStateRepository.GetUserState(e.User.Id).Favorability)+"!");
             }
             else if (e.ErrorType == CommandErrorType.BadArgCount)
             {
-                await e.Channel.SendMessage("Error: Invalid parameter count.");
+                await e.Channel.SendMessage("Error: Invalid parameter count, " + Nicknames.GetNickname(UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
             }
             else if (e.ErrorType == CommandErrorType.InvalidInput)
             {
-                await e.Channel.SendMessage("Error: Invalid input! Make sure your quotes match up correctly!");
+                await e.Channel.SendMessage("Error: Invalid input! Make sure your quotes match up correctly, " + Nicknames.GetNickname(UserStateRepository.GetUserState(e.User.Id).Favorability) + "!");
             }
             else if (e.ErrorType == CommandErrorType.UnknownCommand)
             {

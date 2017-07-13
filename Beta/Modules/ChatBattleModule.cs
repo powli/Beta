@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Discord;
+using Beta.Utils;
 using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
@@ -273,7 +274,7 @@ namespace Beta.Modules
         string SizerAirlock = "Sizer pushes {0} out of the airlock, lights a cigar, and returns to his throne";
         string FFAirlock ="FriendlyFire materializes an airlock around {0} then pushes them out of it, grunting something about having work to do.";
         string DFAirlock = "DarkForce pushes {0} out of the airlock, feels great about himself for being such a go-getter for about five minutes, then has a panic attack for the next five hours over having just committed murder. His Google searches over this period of time include \'Can the police discover bodies in space?\', \'Will bodies, evidence, organic matter burn up upon atmospheric reentry?\', and \'Does it count as murder if your victim was really, really, super aggravating?\'";
-        string DefaultAirlock = "{0} pushes {1} out of the airlock, cackaling manaically. So long, jerkwad!";
+        string DefaultAirlock = "{0} pushes {1} out of the airlock, cackaling manaically. So long, "+Nicknames.GetNickname(-500.0)+"!";
         string AdminFail = "{0} attempted to push {1} out of the airlock, however {1} sidesteps and pushes them out, instead. What a chump.";
         string AirlockFail = "{0} tried to push {1} out of the airlock, however {0} tripped and fell out instead... Better luck next time!";
         string RPGStats = "Level: {0} HP: {1}/{2} Stamina: {3}/{4}Gold: {5} XP: {6} Kills: {7} Deaths: {8} ";
