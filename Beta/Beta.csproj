@@ -190,7 +190,7 @@
     <Compile Include="Repository\GamertagRepository.cs" />
     <Compile Include="Repository\TwitterXMLRepository.cs" />
     <Compile Include="Repository\UserStateRepository.cs" />
-    <Compile Include="Utils\Faces.cs" />
+    <Compile Include="Utils\BetaPersonality.cs" />
     <Compile Include="Utils\Dice.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -10,8 +10,13 @@ using System.Threading.Tasks;
 namespace Beta.Cram.Models
 {
     [Table("CharacterItems")]
-    class CharacterItem : Item
+    class CharacterItem 
     {
+        [Key]
+        public int ItemID { get; set; }
+        public string ItemName { get; set; }
+        public string ItemDescription { get; set; }
+        public double ItemCost { get; set; }
         //The ID of the item from the Item Table        
         public int ItemParentID { get; set; }
         public int QuantityOwned { get; set; }        
@@ -19,9 +24,12 @@ namespace Beta.Cram.Models
         public int CharacterId { get; set; }
         [ForeignKey("CharacterId")]
         public virtual Character character { get; set; }
-        public CharacterItem(Item item, int quantity, int charID):base(item)
+        public CharacterItem(string name, string desc, double cost, int id, int quantity)
         {
-            ItemParentID = item.ItemID;
+            ItemName = name;
+            ItemDescription = desc;
+            ItemCost = cost;
+            ItemParentID = id;
             QuantityOwned = quantity;            
         }        
 

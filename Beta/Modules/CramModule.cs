@@ -148,8 +148,8 @@ namespace Beta.Modules
                             {
                                 using (CharacterContext db = new CharacterContext())
                                 {
-                                    Item item = db.Items.FirstOrDefault(i => i.ItemID == itemId);
-                                    db.Detach(item);
+                                    List<Item> items = db.Items.ToList<Item>();                                    
+                                    Item item = items.FirstOrDefault(i => i.ItemID == itemId);
                                     if (item != null)
                                     {
                                         Character selectedCharacter = db.Characters.FirstOrDefault(c => c.CharacterID == usr.SelectedCharacter);
