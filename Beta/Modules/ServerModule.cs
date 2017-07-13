@@ -37,7 +37,8 @@ namespace Beta.Modules
                     {
                         await e.Channel.SendMessage(e.GetArg("text"));
                         await e.Message.Delete();
-                        
+                        Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 10);
+
                     });
 
                 cgb.CreateCommand("setmotd")
@@ -50,9 +51,10 @@ namespace Beta.Modules
                         {
                             Beta.ChannelStateRepository.ChannelStates.FirstOrDefault(cs => cs.ChannelID == e.Channel.Id).MOTD = e.GetArg("text");
                             Beta.ChannelStateRepository.Save();
-                            await e.User.SendMessage("Ok Boss, I set that message for you!");
+                            await e.User.SendMessage("Ok " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ", I set that message for you!");
                             await e.Message.Delete();
                             await e.Channel.SendMessage(Beta.ChannelStateRepository.GetChannelState(e.Channel.Id).MOTD);
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 10);
                         }                       
                     });
 
@@ -66,12 +68,14 @@ namespace Beta.Modules
                     Channel chnl = e.Server.TextChannels.FirstOrDefault( c => c.Id == id );
                     if (chnl != null)
                     {
-                        await e.Channel.SendMessage("Ok, I've marked that as the punishment room for all Kappa violators!");
+                        await e.Channel.SendMessage("Ok " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ", I've marked that as the punishment room for all Kappa violators!");
                         Beta.ServerStateRepository.GetServerState(e.Server.Id).KappaChannel = id;
+                        Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                     }
                     else
                     {
-                        await e.Channel.SendMessage("Dude, I didn't recognize that id. Try again.");
+                        await e.Channel.SendMessage(Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ", I didn't recognize that id. Try again.");
+                        Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                     }
                         
                 });
@@ -119,15 +123,18 @@ namespace Beta.Modules
                                                 e.Channel.SendMessage(
                                                     string.Format("Rolled one d{0}) plus {1} and got a total of {2}", sides,
                                                         modifier, temp + modifier));
+                                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                                         }
                                         else
                                         {
-                                            await e.Channel.SendMessage("Sorry, I don't recognize that number");
+                                            await e.Channel.SendMessage("Sorry, I don't recognize that number, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + "");
+                                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                                         }
                                     }
                                     else
                                     {
-                                        await e.Channel.SendMessage("Sorry, I don't recognize that number");
+                                        await e.Channel.SendMessage("Sorry, I don't recognize that number, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + "");
+                                        Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                                     }
                                 }
                                 else
@@ -138,10 +145,12 @@ namespace Beta.Modules
                                         await
                                             e.Channel.SendMessage(string.Format("Rolled one d{0} and got a total of {1}",
                                                 sides, dice.Roll()));
+                                        Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                                     }
                                     else
                                     {
-                                        await e.Channel.SendMessage("Sorry, I don't recognize that number");
+                                        await e.Channel.SendMessage("Sorry, I don't recognize that number, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + "");
+                                        Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                                     }
                                 }
                             }
@@ -165,15 +174,18 @@ namespace Beta.Modules
                                                 await
                                                     e.Channel.SendMessage(string.Format("Individual Rolls: {0}",
                                                         string.Join(",", temp.Rolls)));
+                                                Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                                             }
                                             else
                                             {
-                                                await e.Channel.SendMessage("Sorry, I don't recognize that number");
+                                                await e.Channel.SendMessage("Sorry, I don't recognize that number, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + "");
+                                                Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                                             }
                                         }
                                         else
                                         {
-                                            await e.Channel.SendMessage("Sorry, I don't recognize that number");
+                                            await e.Channel.SendMessage("Sorry, I don't recognize that number, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + "");
+                                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                                         }
                                     }
                                     else
@@ -188,10 +200,12 @@ namespace Beta.Modules
                                             await
                                                 e.Channel.SendMessage(string.Format("Individual Rolls: {0}",
                                                     string.Join(",", temp.Rolls)));
+                                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                                         }
                                         else
                                         {
-                                            await e.Channel.SendMessage("Sorry, I don't recognize that number");
+                                            await e.Channel.SendMessage("Sorry, I don't recognize that number, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + "");
+                                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                                         }
                                     }
                                 }
@@ -208,6 +222,7 @@ namespace Beta.Modules
                         if (Beta.CheckModuleState(e, "ask", e.Channel.IsPrivate))
                         {
                             await e.Channel.SendMessage(Configuration._8BallResponses.GetRandom());
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                         }
 
                     });
@@ -223,11 +238,12 @@ namespace Beta.Modules
                                 await
                                     e.Channel.SendMessage(Beta.ChannelStateRepository.GetChannelState(e.Channel.Id).MOTD);
                                 await e.Message.Delete();
+                                Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                             }
                             else
                                 await
                                     e.Channel.SendMessage(
-                                        "Sorry dude, there is no message! harass the Admins or something.");
+                                        "Sorry " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ", there is no message! harass the Admins or something.");
                         }
                     });
 
@@ -241,12 +257,14 @@ namespace Beta.Modules
                         UserState user = Beta.UserStateRepository.UserStates.FirstOrDefault(us => us.UserName.ToLower() == e.GetArg("User").ToLower());
                         if (user != null)
                         {
-                            await e.Channel.SendMessage("You got it boss!");
+                            await e.Channel.SendMessage("You got it " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + "!");
                             user.ClearAllKappas();
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                         }
                         else
                         {
-                            await e.Channel.SendMessage("Sorry, boss. I don't recognize that meatbag.");
+                            await e.Channel.SendMessage("Sorry, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ". I don't recognize that meatbag.");
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                         }
                         
                     });
@@ -265,13 +283,15 @@ namespace Beta.Modules
                                     .ToggleFeatureBool(e.GetArg("Module").ToLower());
                             await
                                 e.Channel.SendMessage(
-                                    String.Format("Ok, I've toggled the setting enabling {0} so now it's set to {1} for the entire server",
+                                    String.Format("Ok " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ", I've toggled the setting enabling {0} so now it's set to {1} for the entire server",
                                         e.GetArg("Module"), changedState.ToString()));
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                         }
                         else
                         {
-                            await e.Channel.SendMessage(String.Format("Sorry, guy. I don't see a module named {0} in the approved list...", e.GetArg("Module") ) )
+                            await e.Channel.SendMessage(String.Format("Sorry, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ". I don't see a module named {0} in the approved list...", e.GetArg("Module") ) )
                             ;
+                            Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                         }
                         Beta.ServerStateRepository.Save();
                     });
@@ -292,11 +312,13 @@ namespace Beta.Modules
                                     e.Channel.SendMessage(
                                         String.Format("Ok, I've toggled the setting enabling {0} so now it's set to {1}",
                                             e.GetArg("Module"), changedState.ToString()));
+                                Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                             }
                             else
                             {
-                                await e.Channel.SendMessage(String.Format("Sorry, guy. I don't see a module named {0} in the approved list...", e.GetArg("Module")))
+                                await e.Channel.SendMessage(String.Format("Sorry, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ". I don't see a module named {0} in the approved list...", e.GetArg("Module")))
                                 ;
+                                Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
                             }
                             Beta.ChannelStateRepository.Save();
                         });
