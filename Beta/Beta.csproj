@@ -170,6 +170,7 @@
     <Compile Include="Modules\GamertagModule.cs" />
     <Compile Include="Modules\MemeGeneratingModule.cs" />
     <Compile Include="Modules\NoteModule.cs" />
+    <Compile Include="Modules\ScrumModule.cs" />
     <Compile Include="Repository\ChannelStateRepository.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="ExtensionMethod.cs" />

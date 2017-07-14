@@ -152,6 +152,10 @@ namespace Beta.Repository
         public bool CramEnabled { get; set; } = false;
         [XmlAttribute]
         public bool MemeGenEnabled { get; set; } = false;
+        [XmlAttribute]
+        public bool ScrumEnabled { get; set; } = false;
+        [XmlAttribute]
+        public DateTime ScrumReminderDateTIme { get; set; }
 
         public void EnableBetaSpeak()
         {
