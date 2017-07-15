@@ -58,27 +58,7 @@ namespace Beta.Modules
                         }                       
                     });
 
-                cgb.CreateCommand("kappa")
-                .MinPermissions((int)PermissionLevel.ServerModerator)
-                .Description("Set the ID of the kappa punishment room.")
-                .Parameter("id", ParameterType.Required)
-                .Do(async e =>
-                {
-                    ulong id = Convert.ToUInt64(e.GetArg("id"));
-                    Channel chnl = e.Server.TextChannels.FirstOrDefault( c => c.Id == id );
-                    if (chnl != null)
-                    {
-                        await e.Channel.SendMessage("Ok " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ", I've marked that as the punishment room for all Kappa violators!");
-                        Beta.ServerStateRepository.GetServerState(e.Server.Id).KappaChannel = id;
-                        Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
-                    }
-                    else
-                    {
-                        await e.Channel.SendMessage(Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ", I didn't recognize that id. Try again.");
-                        Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, -1);
-                    }
-                        
-                });
+                
 
                 cgb.CreateCommand("initstates")
                     .MinPermissions((int) PermissionLevel.BotOwner) 
@@ -258,7 +238,7 @@ namespace Beta.Modules
                         if (user != null)
                         {
                             await e.Channel.SendMessage("You got it " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + "!");
-                            user.ClearAllKappas();
+                            
                             Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                         }
                         else

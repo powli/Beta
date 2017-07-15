@@ -152,20 +152,7 @@ namespace Beta
                     if (!e.Message.Channel.IsPrivate) ChannelStateRepository.AddChannel(e.Channel, e.Server);
 
                     if (e.User.IsBot) UserStateRepository.AddUser(e.User.Name, "bot");
-                    else UserStateRepository.AddUser(e.User);
-
-                    if (!e.User.IsBot && UserStateRepository.GetUserState(e.User.Id).HasKappaViolations())
-                    {
-                        if (GetPermissions(e.User, e.Channel) >= PermissionLevel.ChannelModerator)
-                        {
-                            UserStateRepository.GetUserState(e.User.Id).ClearAllKappas();
-                        }
-                        else
-                        {
-                            UserStateRepository.IncrementKappaMessageCount(e.User.Id);
-                            Cantina.SendMessage(":eggplant: Kappa." + e.User.Mention);
-                        }
-                    }
+                    else UserStateRepository.AddUser(e.User);                    
 
                     if (e.Message.IsAuthor)
                         _client.Log.Info("<<Message",
@@ -269,11 +256,7 @@ namespace Beta
                         }
                         e.Channel.SendMessage(msg);
                     }
-                    else if (Regex.IsMatch(e.Message.Text, @"k.{0,3}a.{0,3}p.{0,3}p.{0,3}a", RegexOptions.IgnoreCase) && ServerStateRepository.GetServerState(e.Server.Id).KappaChannel != 0 && !e.User.IsBot)
-                    {
-                        e.Channel.SendMessage("Get that weak ass Twitch shit out of here, " + e.User.Mention + "! Nerd.");
-                        UserStateRepository.GetUserState(e.User.Id).AddKappaViolation();
-                    }
+                    
                     /*else if (e.Message.Text.IndexOf("hillary", StringComparison.OrdinalIgnoreCase) >= 0 ||
                              e.Message.Text.IndexOf("clinton", StringComparison.OrdinalIgnoreCase) >= 0 &&
                              CheckModuleState(e, "politics", e.Channel.IsPrivate) && !e.User.IsBot)
@@ -416,8 +399,7 @@ namespace Beta
                 BetaUpdateTimer.AutoReset = false;
                 BetaUpdateTimer.Elapsed += (sender, e) =>
                 {                    
-                    BetaUpdateTick();
-                    UserStateRepository.EvaluateKappaViolations();
+                    BetaUpdateTick();                    
                     NPCUpdateTick();
                     ChannelStateRepository.Save();
                     ServerStateRepository.Save();

@@ -64,20 +64,7 @@ namespace Beta.Repository
         public List<UserState> UserStates { get; set; }
         [XmlArrayItem("NPCUserState")]
         public List<NPCUserState> NPCUserStates { get; set; }
-        
-        public void IncrementKappaMessageCount(ulong id)
-        {
-            UserState usr = GetUserState(id);
-            usr.KappaViolations[0].MessageCount++;
-        }
-
-        public void EvaluateKappaViolations()
-        {
-            foreach (UserState user in UserStates)
-            {
-                user.EvaluateKappaViolations();
-            }
-        }
+                
 
         public void AddUser(User usr)
         {
@@ -570,10 +557,7 @@ namespace Beta.Repository
         public int RPGStaminaPotions { get; set; }
 
         [XmlAttribute]
-        public bool Alive { get; set; } = true;
-
-        [XmlArrayItem("KappaViolations")]
-        public List<KappaViolation> KappaViolations {get; set;} = new List<KappaViolation>();
+        public bool Alive { get; set; } = true;        
 
         [XmlAttribute]
         public int SelectedCharacter { get; set; } = 0;
@@ -592,36 +576,7 @@ namespace Beta.Repository
 
         [XmlAttribute]
         public string SelectedGameName { get; set; }
-        #endregion
-
-        public void AddKappaViolation()
-        {
-            KappaViolations.Add(new KappaViolation()
-            {
-                VioltionDateTime = DateTime.Now
-            });
-        }
-
-        public void EvaluateKappaViolations()
-        {            
-            List<KappaViolation> forgivenViolations = new List<KappaViolation>();
-            foreach (KappaViolation violation in KappaViolations)
-            {                
-                if ((violation.VioltionDateTime.AddHours(1) < DateTime.Now) || (violation.MessageCount > 200))
-                {
-                    forgivenViolations.Add(violation);                    
-                }
-            }
-            foreach (KappaViolation violation in forgivenViolations)
-            {
-                KappaViolations.Remove(violation);
-            }            
-        }
-        
-        public bool HasKappaViolations()
-        {
-            return KappaViolations.Count > 0;
-        }
+        #endregion               
 
         public virtual bool IsBot()
         {
@@ -767,22 +722,8 @@ namespace Beta.Repository
             {
                 return new Result(false, dmg);
             }
-        }
-
-        public void ClearAllKappas()
-        {
-            KappaViolations = new List<KappaViolation>();
-        }
-    }
-
-    public class KappaViolation
-    {
-        [XmlAttribute]
-        public DateTime VioltionDateTime {get; set;}
-        
-        [XmlAttribute]
-        public int MessageCount = 0;        
-    }
+        }        
+    }    
 
     public struct Spoils
     {
