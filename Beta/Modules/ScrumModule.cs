@@ -1,4 +1,5 @@
 ﻿using Beta.Repository;
+using Beta.Scrum;
 using Beta.Utils;
 using Discord;
 using Discord.Commands;
@@ -35,7 +36,7 @@ namespace Beta.Modules
                 .Do(async e =>
                 {
                     DateTime dateTime;
-                    if (DateTime.TryParse(e.GetArg("dateime"), out dateTime))
+                    if (DateTime.TryParse(e.GetArg("datetime"), out dateTime))
                     {
                         ChannelState channel = Beta.ChannelStateRepository.GetChannelState(e.Channel.Id);
                         channel.ScrumEnabled = true;
@@ -45,7 +46,52 @@ namespace Beta.Modules
                     else await e.Channel.SendMessage("Sorry, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ". I couldn't parse that DateTime.");
                 });
 
+                cgb.CreateCommand("addscrumer")
+                .Description("Add the user with the given ID to the list of scrummers to remind.")
+                .Parameter("uid", ParameterType.Unparsed)
+                .Do(async e =>
+                {
+                    ulong id;
+                    if (ulong.TryParse(e.GetArg("uid"), out id))
+                    {
+                        ChannelState channel = Beta.ChannelStateRepository.GetChannelState(e.Channel.Id);
+                        if (channel.ScrumEnabled)
+                        {
+                            if (e.Channel.GetUser(id) != null)
+                            {
+                                channel.ScrumerIds.Add(id);
+                            }
+                            else await e.Channel.SendMessage("Sorry " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ", looks like that user isn't in this Channel.");
+                        }
+                        else await e.Channel.SendMessage("Sorry " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ", looks like that Scrum isn't enabled for this Channel.");
+                    }
+                    else await e.Channel.SendMessage("Doesn't look like that's a number, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
+                });
 
+                cgb.CreateCommand("scrumers")
+                .Description("List the scrumers for the current channel.")
+                .Do(async e =>
+                {
+                    ChannelState channel = Beta.ChannelStateRepository.GetChannelState(e.Channel.Id);
+                    if (channel.ScrumEnabled)
+                    {
+                        string msg = "Here's the list of scrumers:\n\n";
+                        msg += channel.GetScrumerNames(e.Channel);
+                        await e.Channel.SendMessage(msg);
+                    }
+                    else await e.Channel.SendMessage("Sorry " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ", scrum hasn't been setup for this channel!");
+                });
+
+                cgb.CreateCommand("update")
+                .Description("Submit an update for this weeks scrum. Removes you from the weekly blast from Beta.")
+                .Parameter("update", ParameterType.Unparsed)
+                .Do(async e =>
+                {
+                    Console.WriteLine(e.Args[0]);                    
+                    ScrumManager.AddNewUpdate(e.Args[0], e.User.Name, e.Channel.Id);
+                    Beta.ChannelStateRepository.GetChannelState(e.Channel.Id).UpdatedScrumerIds.Add(e.User.Id);
+                    await e.Channel.SendMessage("Logged that update, "+Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability)+".");
+                });
             });
         }
     }

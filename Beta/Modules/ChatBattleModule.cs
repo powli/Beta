@@ -567,8 +567,7 @@ namespace Beta.Modules
                                         e.User.Name, e.GetArg("target"), WeaponPrefixList.GetRandom(),
                                         WeaponList.GetRandom(),
                                         WeaponSuffixList.GetRandom(), damage));
-                        }
-                        Beta.UserStateRepository.Save();
+                        }                        
                     }
                     else if (!attacker.Alive)
                     {

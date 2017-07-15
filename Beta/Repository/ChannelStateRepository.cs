@@ -130,7 +130,7 @@ namespace Beta.Repository
         public List<string> ChattyRepo { get; set; }
 
         [XmlAttribute]
-        public bool GamertagModuleEnabled { get; set; } = false;
+        public bool GamertagModuleEnabled { get; set; } = false;        
 
         [XmlAttribute]
         public bool NoteModuleEnabled { get; set; } = false;
@@ -156,10 +156,47 @@ namespace Beta.Repository
         public bool ScrumEnabled { get; set; } = false;
         [XmlAttribute]
         public DateTime ScrumReminderDateTIme { get; set; }
+        [XmlArrayItem("Scrumers")]
+        public List<ulong> ScrumerIds { get; set; }
+        [XmlArrayItem("UpdatedScumers")]
+        public List<ulong> UpdatedScrumerIds { get; set; }
 
         public void EnableBetaSpeak()
         {
             BetaCanSpeak = true;
+        }
+
+        public List<ulong> GetUnupdatedScrumers()
+        {
+            List<ulong> list = new List<ulong>();
+
+            foreach (ulong uid in ScrumerIds)
+            {
+                if (!UpdatedScrumerIds.Contains(uid))
+                {
+                    list.Add(uid);
+                }
+            }
+
+            return list;
+        }
+
+        public string GetScrumerNames(Channel channel)
+        {
+            string msg = "";
+            foreach (ulong uid in ScrumerIds)
+            {
+                try
+                {
+                    msg += channel.GetUser(uid).Name + "\n";
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Looks like that user is no longer in this channel...");
+                    Console.WriteLine(ex.Message);
+                }
+            }
+            return msg;
         }
 
         public void DisableBetaSpeak()
