@@ -40,7 +40,7 @@ namespace Beta.Modules
                     {
                         ChannelState channel = Beta.ChannelStateRepository.GetChannelState(e.Channel.Id);
                         channel.ScrumEnabled = true;
-                        channel.ScrumReminderDateTIme = dateTime;
+                        channel.ScrumReminderDateTime = dateTime;
                         await e.Channel.SendMessage("Ok, I've set that date for your weekly Scrum reminders!");
                     }
                     else await e.Channel.SendMessage("Sorry, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ". I couldn't parse that DateTime.");

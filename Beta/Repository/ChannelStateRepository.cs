@@ -155,7 +155,7 @@ namespace Beta.Repository
         [XmlAttribute]
         public bool ScrumEnabled { get; set; } = false;
         [XmlAttribute]
-        public DateTime ScrumReminderDateTIme { get; set; }
+        public DateTime ScrumReminderDateTime { get; set; }
         [XmlArrayItem("Scrumers")]
         public List<ulong> ScrumerIds { get; set; }
         [XmlArrayItem("UpdatedScumers")]

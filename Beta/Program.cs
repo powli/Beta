@@ -374,6 +374,44 @@ namespace Beta
                 UserStateRepository.AddUser("Beta","beta");
                 Servers = _client.Servers.ToList();
                 BuildUserList();
+                #region Timers
+
+                System.Timers.Timer ScrumUpdateTimer = new System.Timers.Timer(1000 * 60 * 60);
+                ScrumUpdateTimer.AutoReset = false;
+                ScrumUpdateTimer.Elapsed += (sender, e) =>
+                {
+                    foreach (ChannelState channel in ChannelStateRepository.ChannelStates)
+                    {
+                        if (channel.ScrumEnabled)
+                        {
+                            //If the scrum date is before now, but wasn't the last time we checked (an hour ago) fire
+                            if ((DateTime.Now > channel.ScrumReminderDateTime) && DateTime.Now.AddHours(-1) < channel.ScrumReminderDateTime)
+                            {
+                                List<ulong> userIds = channel.GetUnupdatedScrumers();
+                                Channel discordChannel = _client.GetChannel(channel.ChannelID);
+                                foreach (ulong id in userIds)
+                                {
+                                    User user = discordChannel.GetUser(id);
+                                    //discordChannel.SendMessage(user.Mention + ", I haven't seen an update for you yet this week!");
+                                }
+                                //Move the ScrumReminderDateTime forward a week and wipe the UpdatedScrumerIds List
+                                channel.ScrumReminderDateTime.AddDays(7);
+                                channel.UpdatedScrumerIds = new List<ulong>();
+                            }
+                            //In case we hit a istuation where Beta was offline for longer than 7 days and needs to catch up.
+                            else
+                            {
+                                while (!(DateTime.Now.AddHours(-1) < channel.ScrumReminderDateTime))
+                                {
+                                    channel.ScrumReminderDateTime.AddDays(7);
+                                }
+                            }
+                        }                                               
+                    }
+                    ScrumUpdateTimer.Start();
+                };
+                ScrumUpdateTimer.Start();
+
                 System.Timers.Timer BetaUpdateTimer = new System.Timers.Timer(60 * 1000.00);
                 BetaUpdateTimer.AutoReset = false;
                 BetaUpdateTimer.Elapsed += (sender, e) =>
@@ -387,6 +425,7 @@ namespace Beta
                     BetaUpdateTimer.Start();
                 };
                 BetaUpdateTimer.Start();                
+
                 System.Timers.Timer BetaAsyncUpdateTimer = new System.Timers.Timer(10 * 1000);
                 BetaAsyncUpdateTimer.AutoReset = false;
                 BetaAsyncUpdateTimer.Elapsed += (sender, e) =>
@@ -400,7 +439,8 @@ namespace Beta
                     BetaAsyncUpdateTimer.Start();
                 };
                 BetaAsyncUpdateTimer.Start();
-               
+                #endregion
+
                 Git = new GitHubClient(new ProductHeaderValue("my-cool-app"));
                 Git.Credentials = new Credentials(Config.GithubAccessToken);
 
