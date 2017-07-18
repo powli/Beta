@@ -359,7 +359,7 @@ namespace Beta
                 BuildUserList();
                 #region Timers
 
-                System.Timers.Timer ScrumUpdateTimer = new System.Timers.Timer(1000 * 60 * 60);
+                System.Timers.Timer ScrumUpdateTimer = new System.Timers.Timer(1000 * /*60 */ 60);
                 ScrumUpdateTimer.AutoReset = false;
                 ScrumUpdateTimer.Elapsed += (sender, e) =>
                 {
@@ -368,17 +368,17 @@ namespace Beta
                         if (channel.ScrumEnabled)
                         {
                             //If the scrum date is before now, but wasn't the last time we checked (an hour ago) fire
-                            if ((DateTime.Now > channel.ScrumReminderDateTime) && DateTime.Now.AddHours(-1) < channel.ScrumReminderDateTime)
-                            {
+                            if (FireScrumCheck(channel))
+                            {                                
                                 List<ulong> userIds = channel.GetUnupdatedScrumers();
                                 Channel discordChannel = _client.GetChannel(channel.ChannelID);
                                 foreach (ulong id in userIds)
                                 {
                                     User user = discordChannel.GetUser(id);
-                                    //discordChannel.SendMessage(user.Mention + ", I haven't seen an update for you yet this week!");
+                                    discordChannel.SendMessage(user.Mention + ", I haven't seen an update for you yet this week!");
                                 }
                                 //Move the ScrumReminderDateTime forward a week and wipe the UpdatedScrumerIds List
-                                channel.ScrumReminderDateTime.AddDays(7);
+                                channel.ScrumReminderDateTime = channel.ScrumReminderDateTime.AddDays(7);
                                 channel.UpdatedScrumerIds = new List<ulong>();
                             }
                             //In case we hit a istuation where Beta was offline for longer than 7 days and needs to catch up.
@@ -783,7 +783,10 @@ namespace Beta
             return PermissionLevel.User;
         }
 
-        
+        public static bool FireScrumCheck(ChannelState channel)
+        {
+            return (DateTime.Now > channel.ScrumReminderDateTime) && DateTime.Now.AddHours(-1) < channel.ScrumReminderDateTime;
+        }
 
         public async void ChangeExpression(string face, string name)
         {
