@@ -58,7 +58,7 @@ namespace Beta.Modules
 
                 cgb.CreateCommand("meme")
                 .Description("Generate your own meme on the fly! Examples:\n\n$meme \"Random|TopText|BottomText\n$meme YUNo|TopTextOnly\n\nSee $memelist for available Memes are just use Random!\"")
-                .Parameter("memeArgs", ParameterType.Required)                
+                .Parameter("memeArgs", ParameterType.Unparsed)                
                 .Do(async e =>
                 {
                     if (Beta.CheckModuleState(e, "meme", e.Channel.IsPrivate))
