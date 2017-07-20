@@ -234,6 +234,9 @@ namespace Beta.Modules
 
         public Image PlaceImageText(List<string> Lines, string memeName, CommandEventArgs e)
         {
+            stringFormat.Alignment = StringAlignment.Center;
+            stringFormat.LineAlignment = StringAlignment.Center;
+
             Image img = OpenImageFile(memeName,e);
             if (img != null)
             {
