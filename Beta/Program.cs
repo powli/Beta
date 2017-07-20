@@ -633,6 +633,8 @@ namespace Beta
 
                 if ((topLineString.Length - bottomLineString.Length) <= 7)
                 {
+                    bottomLineList.Reverse();
+                    bottomLineString = string.Join(" ",bottomLineList.ToArray());
                     Image imageWithMemeText = MemeGeneratingModule.PlaceImageText(topLineString, bottomLineString, "github");
                     string fileName = "Memes/Memmit" + DateTime.Now.ToString("hhmmss") + ".png";
                         imageWithMemeText.Save(fileName, ImageFormat.Png);
