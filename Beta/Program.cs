@@ -626,6 +626,7 @@ namespace Beta
 
             while ((topLineString.Length - bottomLineString.Length) > 7 && (topLineString.Count() > 1))
             {
+
                 bottomLineList.Add(topLineList.Last());
                 topLineList.Remove(topLineList.Last());
                 bottomLineString = string.Join(" ",bottomLineList.ToArray());
