@@ -58,6 +58,21 @@ namespace Beta.Modules
                         }                       
                     });
 
+                cgb.CreateCommand("trust")
+                .MinPermissions((int)PermissionLevel.BotOwner)
+                .Description("Adds the specified user to the trusted user list.")
+                .Parameter("uid", ParameterType.Unparsed)
+                .Do(async e =>
+                {
+                    ulong uid;
+                    if (ulong.TryParse(e.GetArg("uid"), out uid))
+                    {
+                        Beta.Config._TrustedUsers.Add(uid);
+                        ConfigHandler.SaveConfig();
+                        await e.Channel.SendMessage("You really trust that one? Well, _you're_ the boss.");
+                    }
+                    else await e.Channel.SendMessage("Who?");
+                });                
                 
 
                 cgb.CreateCommand("initstates")

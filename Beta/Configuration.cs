@@ -25,20 +25,17 @@ namespace Beta.JSONConfig
             public string Quote { get; set; } = "$";
             public string Twitter { get; set; } = "$";
         }
+    }
 
-
-
-        public static class ConfigHandler
+    public static class ConfigHandler
+    {
+        private static readonly object configLock = new object();
+        public static void SaveConfig()
         {
-            private static readonly object configLock = new object();
-            public static void SaveConfig()
+            lock (configLock)
             {
-                lock (configLock)
-                {
-                    File.WriteAllText("data/config.json", JsonConvert.SerializeObject(Beta.Config, Formatting.Indented));
-                }
+                File.WriteAllText("data/config.json", JsonConvert.SerializeObject(Beta.Config, Formatting.Indented));
             }
-
         }
 
     }
