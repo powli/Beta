@@ -77,6 +77,7 @@ namespace Beta.Modules
 
                                 imageWithMemeText.Save(fileName, ImageFormat.Png);
                                 await e.Channel.SendFile(fileName);
+                                e.Message.Delete();
                                 Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                             }
                         }
