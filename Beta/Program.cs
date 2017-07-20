@@ -600,7 +600,7 @@ namespace Beta
         {
             foreach (ChannelState chnl in Beta.ChannelStateRepository.ChannelStates)
             {
-                if (commit.Commit.Message.Length < 110)
+                if (commit.Commit.Message.Length < 110 && chnl.ChatBattleEnabled)
                 {
                     if (!TryMemeCommitMessage(commit, chnl)) return;
                 }
@@ -634,9 +634,10 @@ namespace Beta
                 if ((topLineString.Length - bottomLineString.Length) > 7)
                 {
                     Image imageWithMemeText = MemeGeneratingModule.PlaceImageText(topLineString, bottomLineString, "github");
-                    string fileName = "Memmit" + DateTime.Now+".png";
+                    string fileName = "Memes/Memmit" + DateTime.Now.ToString("hhmmss") + ".png";
                         imageWithMemeText.Save(fileName, ImageFormat.Png);
-                        channel.SendFile(fileName);
+                    channel.SendFile(fileName);
+                    System.Threading.Thread.Sleep(5000);
                         return true;
                 }
             }
