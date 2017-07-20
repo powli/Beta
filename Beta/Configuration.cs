@@ -9,31 +9,7 @@ namespace Beta.JSONConfig
 
         public string Token { get; set; }
         public string BotID { get; set; }
-        public CommandPrefixesModel CommandPrefixes { get; set; } = new CommandPrefixesModel();
-        public static List<string> _8BallResponses { get; set; } = new List<string>
-            {
-                "Most definitely yes",
-                "For sure",
-                "As I see it, yes",
-                "My sources say yes",
-                "Yes",
-                "Most likely",
-                "Perhaps",
-                "Maybe",
-                "Not sure",
-                "It is uncertain",
-                "Ask me again later",
-                "Don't count on it",
-                "Probably not",
-                "Very doubtful",
-                "Most likely no",
-                "Nope",
-                "No",
-                "My sources say no",
-                "Dont even think about it",
-                "Definitely no",
-                "NO - It may cause disease contraction"
-            };
+        public CommandPrefixesModel CommandPrefixes { get; set; } = new CommandPrefixesModel();        
         public string TwitterConsumerKey { get; set; }
         public string TwitterConsumerSecret { get; set; }
         public string TwitterAccessToken { get; set; }
@@ -41,6 +17,7 @@ namespace Beta.JSONConfig
         public string GithubAccessToken { get; set; }
         public string LastGithubCommit { get; set; }
         public List<ulong> _TwitterInstalledChannels { get; set; } = new List<ulong>();
+        public List<ulong> _TrustedUsers { get; set; } = new List<ulong> { 94545463906144256 };
 
         public class CommandPrefixesModel
         {
@@ -48,6 +25,8 @@ namespace Beta.JSONConfig
             public string Quote { get; set; } = "$";
             public string Twitter { get; set; } = "$";
         }
+
+
 
         public static class ConfigHandler
         {
