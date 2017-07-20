@@ -631,7 +631,7 @@ namespace Beta
                 bottomLineString = string.Join(" ",bottomLineList.ToArray());
                 topLineString = string.Join(" ", topLineList.ToArray());
 
-                if ((topLineString.Length - bottomLineString.Length) > 7)
+                if ((topLineString.Length - bottomLineString.Length) <= 7)
                 {
                     Image imageWithMemeText = MemeGeneratingModule.PlaceImageText(topLineString, bottomLineString, "github");
                     string fileName = "Memes/Memmit" + DateTime.Now.ToString("hhmmss") + ".png";
