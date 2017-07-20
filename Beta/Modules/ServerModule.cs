@@ -216,7 +216,7 @@ namespace Beta.Modules
                     {
                         if (Beta.CheckModuleState(e, "ask", e.Channel.IsPrivate))
                         {
-                            await e.Channel.SendMessage(Configuration._8BallResponses.GetRandom());
+                            await e.Channel.SendMessage(Utilities._8BallResponses.GetRandom());
                             Beta.UserStateRepository.ModifyUserFavorability(e.User.Id, 1);
                         }
 

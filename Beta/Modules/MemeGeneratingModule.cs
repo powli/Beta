@@ -20,14 +20,15 @@ namespace Beta.Modules
     class MemeGeneratingModule : DiscordModule
     {
         private DiscordClient _client;
-        private ModuleManager _manager;
-        private StringFormat stringFormat;
+        private ModuleManager _manager;        
         private List<string> Memes;
 
-        Font font = new Font("Impact", 200);
+        static private StringFormat stringFormat = new StringFormat();
 
-        string memeplateFolder = "Memeplates/";
-        string memeFolder = "Memes/";
+        static Font font = new Font("Impact", 200);
+
+       static string  memeplateFolder = "Memeplates/";
+       static string  memeFolder = "Memes/";
 
         public override string Prefix { get; } = Beta.Config.CommandPrefixes.Standard;
 
@@ -44,13 +45,7 @@ namespace Beta.Modules
 
             _manager = manager;
             _client = manager.Client;
-            Memes = GetMemeList();
-
-            stringFormat = new StringFormat();
-            stringFormat.Alignment = StringAlignment.Center;
-            stringFormat.LineAlignment = StringAlignment.Center;
-
-            
+            Memes = GetMemeList();            
 
             _manager.CreateCommands("", cgb =>
             {
@@ -152,8 +147,18 @@ namespace Beta.Modules
             return img;
         }
 
+        public static Image OpenImageFile(string memeName)
+        {
+            string memeFile = memeplateFolder + memeName + ".png";
+            Image img = null;
+            img = Bitmap.FromFile(memeplateFolder + memeName + ".png");
+            font = new Font(font.Name, (int)(0.0625 * img.Height + 12.5)); // Changes the font to have the appropriate size based on image.
+
+            return img;
+        }
+
         //Adjust Font and return one of proper size
-        public Font GetAdjustedFont(Graphics GraphicRef, string GraphicString, Font OriginalFont, int ContainerWidth, int MaxFontSize, int MinFontSize, bool SmallestOnFail)
+        public static Font GetAdjustedFont(Graphics GraphicRef, string GraphicString, Font OriginalFont, int ContainerWidth, int MaxFontSize, int MinFontSize, bool SmallestOnFail)
         {
             // We utilize MeasureString which we get via a control instance           
             for (int AdjustedSize = MaxFontSize; AdjustedSize >= MinFontSize; AdjustedSize--)
@@ -180,6 +185,50 @@ namespace Beta.Modules
             {
                 return OriginalFont;
             }
+        }
+
+        public static Image PlaceImageText(string topLine, string bottomLine, string memeName)
+        {
+            stringFormat.Alignment = StringAlignment.Center;
+            stringFormat.LineAlignment = StringAlignment.Center;
+
+            Image img = OpenImageFile(memeName);
+            int width = img.Width;
+            Graphics graph = Graphics.FromImage(img);
+            GraphicsPath p = new GraphicsPath();
+
+            if (topLine.Length > bottomLine.Length)
+            {
+                font = GetAdjustedFont(graph, "DD" + topLine + "DD", font, width, Convert.ToInt32(font.Size), 10, true);
+            }
+            else font = GetAdjustedFont(graph, "DD" + bottomLine + "DD", font, width, Convert.ToInt32(font.Size), 10, true);
+            //FirstLine
+
+            p.AddString(
+            topLine.ToUpper(),
+            new FontFamily("Impact"),
+            (int)FontStyle.Regular,
+            graph.DpiY * font.SizeInPoints / 72,
+            new Point((int)(0.5 * img.Width), (int)(0.1 * img.Height)),
+            stringFormat);
+
+            //SecondLine
+
+            p.AddString(
+           bottomLine.ToUpper(),
+           new FontFamily("Impact"),
+           (int)FontStyle.Regular,
+           graph.DpiY * font.SizeInPoints / 72,
+           new Point((int)(0.5 * img.Width), (int)(0.9 * img.Height)),
+           stringFormat);
+
+            Pen pen = new Pen(Brushes.Black, font.SizeInPoints / 10); // pen for the text outline
+            pen.Alignment = PenAlignment.Center;
+            pen.LineJoin = LineJoin.Round; // Prevents spikes on some letters
+            graph.DrawPath(pen, p); // makes the outline
+            graph.FillPath(Brushes.White, p); // fills the path
+
+            return img;
         }
 
         public Image PlaceImageText(List<string> Lines, string memeName, CommandEventArgs e)

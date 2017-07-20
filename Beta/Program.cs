@@ -24,6 +24,8 @@ using Tweetinvi.Streaming;
 using User = Discord.User;
 using System.Data.SQLite;
 using Beta.Cram.Models;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace Beta    
 {
@@ -38,6 +40,8 @@ namespace Beta
             ChannelId = id;
         }
     }
+
+    
 
     public class Beta
     {
@@ -109,9 +113,7 @@ namespace Beta
             try
             {
                 Config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText("data/config.json"));
-                Configuration.ConfigHandler.SaveConfig();
-                Console.WriteLine("test");
-                Console.WriteLine(Config.LastGithubCommit);
+                ConfigHandler.SaveConfig();
             }
             catch (Exception ex)
             {
@@ -591,21 +593,56 @@ namespace Beta
                     Config.LastGithubCommit = commit.Sha;                                                            
                 }
             }
-            Configuration.ConfigHandler.SaveConfig();
+            ConfigHandler.SaveConfig();
         }
 
         public async void AnnounceCommitMessage(GitHubCommit commit)
         {
             foreach (ChannelState chnl in Beta.ChannelStateRepository.ChannelStates)
             {
-                string msg = "Looks like a new commit was added!\n";
-                msg += "``` " + commit.Commit.Message + "```";
-                if (chnl.ChatBattleEnabled)
+                if (commit.Commit.Message.Length < 110)
                 {
-                    MessageQueue.Add(new QueuedMessage(msg,chnl.ChannelID));
+                    if (!TryMemeCommitMessage(commit, chnl)) return;
                 }
+                else
+                {
+                    string msg = "Looks like a new commit was added!\n";
+                    msg += "``` " + commit.Commit.Message + "```";
+                    if (chnl.ChatBattleEnabled)
+                    {
+                        MessageQueue.Add(new QueuedMessage(msg, chnl.ChannelID));
+                    }
+                }                
             }
         }
+
+        private bool TryMemeCommitMessage(GitHubCommit commit, ChannelState chnl)
+        {
+            List<string> topLineList = commit.Commit.Message.Split(' ').ToList<string>();
+            List<string> bottomLineList = new List<string>();
+            string topLineString = commit.Commit.Message;
+            string bottomLineString = "";
+            Channel channel = _client.GetChannel(chnl.ChannelID);
+
+            while ((topLineString.Length - bottomLineString.Length) > 7 && (topLineString.Count() > 1))
+            {
+                bottomLineList.Add(topLineList.Last());
+                topLineList.Remove(topLineList.Last());
+                bottomLineString = string.Join(" ",bottomLineList.ToArray());
+                topLineString = string.Join(" ", topLineList.ToArray());
+
+                if ((topLineString.Length - bottomLineString.Length) > 7)
+                {
+                    Image imageWithMemeText = MemeGeneratingModule.PlaceImageText(topLineString, bottomLineString, "github");
+                    string fileName = "Memmit" + DateTime.Now+".png";
+                        imageWithMemeText.Save(fileName, ImageFormat.Png);
+                        channel.SendFile(fileName);
+                        return true;
+                }
+            }
+
+            return false;
+        }        
 
         public static void IngestTwitterHistory()
         {
