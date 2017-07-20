@@ -641,8 +641,10 @@ namespace Beta
             ulong srvrid = e.Server.Id;
             ulong chnlid = e.Channel.Id;
             if (isDirectMessage) return true;
+            if (Config._TrustedUsers.Contains(e.User.Id)) return true;
             ServerState srvr = ServerStateRepository.GetServerState(srvrid);
             ChannelState chnl = ChannelStateRepository.GetChannelState(chnlid);
+            
             switch (module.ToLower())
             {
                 case "ask":
