@@ -28,11 +28,12 @@ namespace Beta.Modules
             _manager.CreateCommands("", cgb =>
             {
 
-                cgb.MinPermissions((int)PermissionLevel.ChannelModerator);
+                cgb.MinPermissions((int)PermissionLevel.User);
 
                 cgb.CreateCommand("scrum")
                 .Description("Allows a Channel Moderator to schedule a weekly Scrum reminder for the specified DateTime - e.g., $scrum \"Sat, 15 July 2017 05:00:00 ET\"")
                 .Parameter("datetime", ParameterType.Unparsed)
+                .MinPermissions((int)PermissionLevel.ChannelModerator)
                 .Do(async e =>
                 {
                     DateTime dateTime;
@@ -49,6 +50,9 @@ namespace Beta.Modules
                 cgb.CreateCommand("addscrumer")
                 .Description("Add the user with the given ID to the list of scrummers to remind.")
                 .Parameter("uid", ParameterType.Unparsed)
+                .Alias("addscrum")
+                .Alias("addscrummer")
+                .MinPermissions((int)PermissionLevel.ChannelModerator)
                 .Do(async e =>
                 {
                     ulong id;
@@ -70,6 +74,7 @@ namespace Beta.Modules
 
                 cgb.CreateCommand("scrumers")
                 .Description("List the scrumers for the current channel.")
+                .Alias("scrummers")
                 .Do(async e =>
                 {
                     ChannelState channel = Beta.ChannelStateRepository.GetChannelState(e.Channel.Id);
@@ -87,10 +92,13 @@ namespace Beta.Modules
                 .Parameter("update", ParameterType.Unparsed)
                 .Do(async e =>
                 {
-                    Console.WriteLine(e.Args[0]);                    
-                    ScrumManager.AddNewUpdate(e.Args[0], e.User.Name, e.Channel.Id);
-                    Beta.ChannelStateRepository.GetChannelState(e.Channel.Id).UpdatedScrumerIds.Add(e.User.Id);
-                    await e.Channel.SendMessage("Logged that update, "+Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability)+".");
+                    if (Beta.ChannelStateRepository.GetChannelState(e.Channel.Id).ScrumerIds.Contains(e.User.Id))
+                    {
+                        ScrumManager.AddNewUpdate(e.Args[0], e.User.Name, e.Channel.Id);
+                        Beta.ChannelStateRepository.GetChannelState(e.Channel.Id).UpdatedScrumerIds.Add(e.User.Id);
+                        await e.Channel.SendMessage("Logged that update, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
+                    }
+                    else await e.Channel.SendMessage("Sorry, looks like you're not configured to be a scrumer, "+Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability)+"!");
                 });
             });
         }
