@@ -92,13 +92,19 @@ namespace Beta.Modules
                 .Parameter("update", ParameterType.Unparsed)
                 .Do(async e =>
                 {
-                    if (Beta.ChannelStateRepository.GetChannelState(e.Channel.Id).ScrumerIds.Contains(e.User.Id))
+                    ChannelState chnl = Beta.ChannelStateRepository.GetChannelState(e.Channel.Id);
+                    if (chnl.ScrumEnabled)
                     {
-                        ScrumManager.AddNewUpdate(e.Args[0], e.User.Name, e.Channel.Id);
-                        Beta.ChannelStateRepository.GetChannelState(e.Channel.Id).UpdatedScrumerIds.Add(e.User.Id);
-                        await e.Channel.SendMessage("Logged that update, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
+                        if (chnl.ScrumerIds.Contains(e.User.Id))
+                        {
+                            ScrumManager.AddNewUpdate(e.Args[0], e.User.Name, e.Channel.Id);
+                            chnl.UpdatedScrumerIds.Add(e.User.Id);
+                            await e.Channel.SendMessage("Logged that update, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
+                        }
+                        else await e.Channel.SendMessage("Sorry, looks like you're not configured to be a scrumer, " + Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + "!");
                     }
-                    else await e.Channel.SendMessage("Sorry, looks like you're not configured to be a scrumer, "+Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability)+"!");
+                    else await e.Channel.SendMessage("Sorry, Scrum is not configured for this channel, "+ Nicknames.GetNickname(Beta.UserStateRepository.GetUserState(e.User.Id).Favorability) + ".");
+                    
                 });
             });
         }
