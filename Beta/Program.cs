@@ -377,7 +377,7 @@ namespace Beta
                                 foreach (ulong id in userIds)
                                 {
                                     User user = discordChannel.GetUser(id);
-                                    discordChannel.SendMessage(user.Mention + ", I haven't seen an update for you yet this week!");
+                                     MessageQueue.Add(new QueuedMessage( user.Mention + ", I haven't seen an update for you yet this week!", channel.ChannelID));
                                 }
                                 //Move the ScrumReminderDateTime forward a week and wipe the UpdatedScrumerIds List
                                 channel.ScrumReminderDateTime = channel.ScrumReminderDateTime.AddDays(7);
@@ -828,6 +828,7 @@ namespace Beta
 
         public static bool FireScrumCheck(ChannelState channel)
         {
+            Console.WriteLine(channel.ScrumReminderDateTime);
             return (DateTime.Now > channel.ScrumReminderDateTime) && DateTime.Now.AddHours(-1) < channel.ScrumReminderDateTime;
         }
 
